@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fifi AI ✨</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#7c3aed" />
+  <!-- The Brantyre ESL Teacher -->
+  <style>
+    body { font-family: system-ui; margin: 0; background: #0f0b1e; color: #fff; }
+    header { text-align: center; padding: 16px; }
+    header img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #7c3aed; }
+    h1 { margin: 6px 0; font-size: 22px; }
+    small { opacity: 0.7; }
+    #chat { padding: 12px; max-width: 700px; margin: auto; padding-bottom: 100px; }
+    .msg { padding: 10px 14px; margin: 6px 0; border-radius: 14px; max-width: 85%; word-wrap: break-word; line-height: 1.4; }
+    .user { background: #4f46e5; margin-left: auto; }
+    .bot  { background: #262038; }
+    .bar { display: flex; gap: 6px; padding: 10px; position: fixed; bottom: 0; left: 0; right: 0; background: #0f0b1e; border-top: 1px solid #2a2440; }
+    input { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 15px; background: #1c1730; color: #fff; }
+    button { padding: 10px 14px; border-radius: 12px; border: none; background: #7c3aed; color: #fff; font-size: 15px; }
+    button:active { opacity: 0.7; }
+    .mic.rec { background: #dc2626; }
+    #voice.off { background: #444; }
+    #sig { opacity: 0.001; position: absolute; top: 0; left: 0; pointer-events: none; }
+    .img-result { max-width: 100%; border-radius: 12px; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="cover.png" alt="Fifi" onerror="this.style.display='none'"/>
+    <h1>Fifi AI ✨</h1>
+    <small>Your clever little AI friend</small>
+  </header>
+
+  <div id="chat"></div>
+
+  <div class="bar">
+    <button id="mic">🎤</button>
+    <button id="voice" class="off">🔇</button>
+    <input id="input" placeholder="Ask Fifi anything..." />
+    <button id="send">Send</button>
+  </div>
+
+  <div id="sig">The Brantyre ESL Teacher</div>
+
+<script>
+const chat    = document.getElementById('chat');
+const input   = document.getElementById('input');
+const send    = document.getElementById('send');
+const mic     = document.getElementById('mic');
+const voiceBtn= document.getElementById('voice');
+const history = [];
+const BACKEND = 'https://fifi-ai-backend.onrender.com';
+let voiceOn   = false;
+
+voiceBtn.onclick = () => {
+  voiceOn = !voiceOn;
+  voiceBtn.textContent = voiceOn ? '🔊' : '🔇';
+  voiceBtn.classList.toggle('off', !voiceOn);
+  if (!voiceOn) speechSynthesis.cancel();
+};
+
+function addMsg(text, cls) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  d.textContent = text;
+  chat.appendChild(d);
+  window.scrollTo(0, document.body.scrollHeight);
+  return d;
+}
+
+function addImg(url) {
+  const img = document.createElement('img');
+  img.src = url;
+  img.className = 'img-result';
+  chat.appendChild(img);
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+async function ask(text) {
+  addMsg(text, 'user');
+  const low = text.toLowerCase();
+
+  if (/^(draw|paint|make a picture|create an image|generate an image)/.test(low)) {
+    const prompt = text.replace(/^(draw|paint|make a picture of|create an image of|generate an image of)\s*/i, '');
+    const loading = addMsg('🎨 Drawing...', 'bot');
+    try {
+      const r = await fetch(BACKEND + '/api/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await r.json();
+      loading.remove();
+      if (data.url) { addImg(data.url); speak('Here is your picture!'); }
+      else addMsg('Error: ' + (data.error || 'unknown'), 'bot');
+    } catch (e) { loading.textContent = 'Error: ' + e.message; }
+    return;
+  }
+
+  history.push({ role: 'user', content: text });
+  const loading = addMsg('...', 'bot');
+  try {
+    const r = await fetch(BACKEND + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: history }),
+    });
+    const data = await r.json();
+    loading.textContent = data.reply || data.error;
+    history.push({ role: 'assistant', content: data.reply });
+    speak(data.reply);
+  } catch (e) { loading.textContent = 'Error: ' + e.message; }
+}
+
+send.onclick = () => {
+  if (!input.value.trim()) return;
+  ask(input.value.trim());
+  input.value = '';
+};
+
+input.addEventListener('keydown', e => { if (e.key === 'Enter') send.click(); });
+
+mic.onclick = () => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return alert('Use Chrome or Brave for voice input.');
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.onresult = e => { input.value = e.results[0][0].transcript; send.click(); };
+  rec.onstart = () => mic.classList.add('rec');
+  rec.onend = () => mic.classList.remove('rec');
+  rec.onerror = e => alert('Mic error: ' + e.error);
+  rec.start();
+};
+
+function speak(text) {
+  if (!text) return;
+  if (!voiceOn) return;
+  const u = new SpeechSynthesisUtterance(text.slice(0, 400));
+  u.pitch = 1.7;
+  u.rate  = 1.05;
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(x => /female|samantha|zira|google uk english female/i.test(x.name));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+</script>
+</body>
+</html>

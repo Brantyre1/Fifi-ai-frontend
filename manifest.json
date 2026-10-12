@@ -1,0 +1,17 @@
+{
+  "name": "Fifi AI",
+  "short_name": "Fifi",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f0b1e",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "cover.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
