@@ -1,14 +1,32 @@
-"name": "Lumera",
-"short_name": "Lumera",
+{
+  "name": "Lumera",
+  "short_name": "Lumera",
+  "description": "Lumera — your brilliant little AI companion that chats, thinks critically, writes code, draws pictures, and speaks.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0f0b1e",
   "theme_color": "#7c3aed",
-  "orientation": "portrait",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "education", "utilities"],
   "icons": [
     {
       "src": "cover.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "cover.png",
       "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "cover.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
