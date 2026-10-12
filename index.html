@@ -25,6 +25,16 @@
     .msg th, .msg td { border: 1px solid #3a3450; padding: 4px 8px; }
     .msg hr { border: none; border-top: 1px solid #3a3450; margin: 10px 0; }
     .msg strong { color: #c4b5fd; }
+.footer-sig {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #3a3450;
+  text-align: right;
+  font-size: 0.8em;
+  color: #a78bfa;
+  opacity: 0.7;
+  font-style: italic;
+}
     .user { background: #4f46e5; margin-left: auto; }
     .bot  { background: #262038; }
     .bar { display: flex; gap: 6px; padding: 10px; position: fixed; bottom: 0; left: 0; right: 0; background: #0f0b1e; border-top: 1px solid #2a2440; }
@@ -122,14 +132,16 @@ async function ask(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: history }),
     });
-    const data = await r.json();
-    if (window.marked) {
-      loading.innerHTML = marked.parse(data.reply || data.error);
-    } else {
-      loading.textContent = data.reply || data.error;
-    }
-    history.push({ role: 'assistant', content: data.reply });
-    speak(data.reply);
+   const data = await r.json();
+const reply = data.reply || data.error || '';
+const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+if (window.marked) {
+  loading.innerHTML = marked.parse(reply) + footer;
+} else {
+  loading.innerHTML = '<div>' + reply + '</div>' + footer;
+}
+history.push({ role: 'assistant', content: reply });
+speak(reply);
   } catch (e) { loading.textContent = 'Error: ' + e.message; }
 }
 
