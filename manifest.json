@@ -1,6 +1,5 @@
-{
-  "name": "Fifi AI",
-  "short_name": "Fifi",
+"name": "Lumera",
+"short_name": "Lumera",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f0b1e",
