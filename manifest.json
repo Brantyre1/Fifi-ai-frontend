@@ -13,22 +13,28 @@
   "categories": ["productivity", "education", "utilities"],
   "icons": [
     {
-      "src": "cover.png",
+      "src": "cover-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "cover.png",
+      "src": "cover-256.png",
       "sizes": "256x256",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "cover.png",
+      "src": "cover-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "cover-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
