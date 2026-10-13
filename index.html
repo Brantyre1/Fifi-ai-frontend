@@ -218,9 +218,10 @@ try {
           d.className = 'msg ' + cls;
           if (cls === 'bot' && window.marked) {
             const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
 const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
 const combined = footer + copyHtml;
-            d.innerHTML = marked.parse(m.content) + footer;
+d.innerHTML = marked.parse(m.content) + combined;
           } else {
             d.textContent = m.content;
           }
@@ -323,12 +324,14 @@ const r = await fetch(BACKEND + '/api/chat', {
     const data = await r.json();
     const reply = data.reply || data.error || '';
     const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
-    if (window.marked) {
+const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
+const combined = footer + copyHtml;
+if (window.marked) {
   loading.innerHTML = marked.parse(reply) + combined;
 } else {
   loading.innerHTML = '<div>' + reply + '</div>' + combined;
 }
-   history.push({role:'assistant',content:reply});
+history.push({ role: 'assistant', content: reply });
 try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
 speak(reply);
   } catch (e) { loading.textContent = 'Error: ' + e.message; }
