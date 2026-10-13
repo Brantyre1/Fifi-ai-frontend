@@ -1,4 +1,4 @@
-const CACHE = "lumera-v11";
+const CACHE = "lumera-v12";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./cover.png"];
 
 self.addEventListener("install", (e) => {
