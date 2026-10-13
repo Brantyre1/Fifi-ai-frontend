@@ -7,7 +7,25 @@
   <!-- The Brantyre ESL Teacher -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+const menuBtn = document.getElementById('menuBtn');
+const drawer = document.getElementById('drawer');
+const closeDrawer = document.getElementById('closeDrawer');
+const sessionsList = document.getElementById('sessionsList');
+const newChatBtn = document.getElementById('newChatBtn');
+function formatTime(iso) { try { const d = new Date(iso); const today = new Date(); const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); if (d.toDateString() === today.toDateString()) return 'Today ' + time; const yest = new Date(today); yest.setDate(yest.getDate() - 1); if (d.toDateString() === yest.toDateString()) return 'Yesterday ' + time; return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + time; } catch { return 'Unknown'; } }
+function renderSessions() { sessionsList.innerHTML = ''; if (sessions.length === 0) { sessionsList.innerHTML = '<p style="color:#8e8e93;font-size:14px;text-align:center;padding:20px;">No past conversations yet.</p>'; return; } const sorted = [...sessions].sort((a,b) => new Date(b.startedAt) - new Date(a.startedAt)); sorted.forEach(sess => { const div = document.createElement('div'); div.style.cssText = 'padding:12px;border-radius:10px;background:#f2f2f7;margin-bottom:8px;cursor:pointer;'; div.onclick = () => loadSession(sess.id); const preview = sess.messages.find(m => m.role === 'user'); const previewText = preview ? preview.content.slice(0, 60) : sess.title; div.innerHTML = '<div style="font-size:12px;color:#8e8e93;margin-bottom:4px;">' + formatTime(sess.startedAt) + '</div><div style="font-size:14px;color:#1c1c1e;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + previewText + '</div>'; sessionsList.appendChild(div); }); }
+function loadSession(id) { const sess = sessions.find(s => s.id === id); if (!sess) return; if (currentSession.messages.length > 0) saveCurrentSession(); currentSession = sess; history.length = 0; history.push(...sess.messages); chat.innerHTML = ''; sess.messages.forEach(m => { const cls = m.role === 'user' ? 'user' : 'bot'; const d = document.createElement('div'); d.className = 'msg ' + cls; if (cls === 'bot' && window.marked) { const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>'; const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">Copy</button>'; d.innerHTML = marked.parse(m.content) + footer + copyHtml; } else { d.textContent = m.content; } chat.appendChild(d); }); try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch {} drawer.style.display = 'none'; }
+function saveCurrentSession() { if (history.length === 0) return; currentSession.messages = [...history]; const idx = sessions.findIndex(s => s.id === currentSession.id); if (idx >= 0) sessions[idx] = currentSession; else sessions.push(currentSession); saveSessions(sessions); }
+function startNewSession() { if (currentSession.messages.length > 0) saveCurrentSession(); currentSession = { id: Date.now().toString(), startedAt: new Date().toISOString(), title: 'New conversation', messages: [] }; history.length = 0; try { localStorage.removeItem('lumera_history'); } catch {} chat.innerHTML = ''; drawer.style.display = 'none'; }
+menuBtn.onclick = () => { renderSessions(); drawer.style.display = 'block'; };
+closeDrawer.onclick = () => drawer.style.display = 'none';
+drawer.onclick = (e) => { if (e.target === drawer) drawer.style.display = 'none'; };
+newChatBtn.onclick = startNewSession;
+window.addEventListener('beforeunload', saveCurrentSession);
+window.addEventListener('pagehide', saveCurrentSession);
+
+</script>
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -178,6 +196,7 @@
 </head>
 <body>
   <header>
+  <button id="menuBtn" style="position:absolute;top:18px;left:16px;background:transparent;border:none;font-size:26px;cursor:pointer;color:#1c1c1e;padding:8px;line-height:1;">☰</button>
     <img src="cover.png" alt="Lumera" onerror="this.style.display='none'"/>
     <h1>Lumera ✨</h1>
     <small>Your brilliant little AI companion</small>
@@ -190,7 +209,7 @@
       <button id="mic">🎤</button>
       <button id="cam" title="Send a photo">📸</button>
       <button id="voice" class="off">🔇</button>
-      <button id="clear" title="Clear chat">🗑️</button>
+      
     </div>
     <div class="input-row">
       <input id="input" placeholder="Ask Lumera anything..." />
@@ -207,9 +226,14 @@ const input   = document.getElementById('input');
 const send    = document.getElementById('send');
 const mic     = document.getElementById('mic');
 const voiceBtn= document.getElementById('voice');
-const clearBtn=document.getElementById('clear');
 const camBtn = document.getElementById('cam');
 const camFile = document.getElementById('camFile');
+
+const SESSIONS_KEY = 'lumera_sessions';
+function loadSessions() { try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]'); } catch { return []; } }
+function saveSessions(list) { try { localStorage.setItem(SESSIONS_KEY, JSON.stringify(list)); } catch {} }
+let sessions = loadSessions();
+let currentSession = { id: Date.now().toString(), startedAt: new Date().toISOString(), title: 'New conversation', messages: [] };
 const history = [];
 // Profile — permanent facts about the user (survives chat clear)
 let profile = {};
@@ -292,7 +316,7 @@ camFile.onchange = async () => {
       }
       history.push({ role: 'user', content: '[sent a photo]' });
       history.push({ role: 'assistant', content: reply });
-      try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
+      try { localStorage.setItem('lumera_history', JSON.stringify(history)); currentSession.messages = [...history]; } catch(e) {}
       speak(reply);
     } catch (e) {
       loading.textContent = 'Error: ' + e.message;
@@ -359,7 +383,7 @@ if (nameMatch) {
   try { localStorage.setItem('lumera_profile', JSON.stringify(profile)); } catch(e) {}
 }
 
-try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
+try { localStorage.setItem('lumera_history', JSON.stringify(history)); currentSession.messages = [...history]; } catch(e) {}
   const loading = addMsg('🤭 Thinking...', 'bot');
   try {
    // Prepend profile info to the messages sent to Lumera
@@ -387,7 +411,7 @@ if (window.marked) {
   loading.innerHTML = '<div>' + reply + '</div>' + combined;
 }
 history.push({ role: 'assistant', content: reply });
-try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
+try { localStorage.setItem('lumera_history', JSON.stringify(history)); currentSession.messages = [...history]; } catch(e) {}
 speak(reply);
   } catch (e) { loading.textContent = 'Error: ' + e.message; }
 }
@@ -442,6 +466,25 @@ function speak(text) {
   if (v) u.voice = v;
   speechSynthesis.speak(u);
 }
+
+const menuBtn = document.getElementById('menuBtn');
+const drawer = document.getElementById('drawer');
+const closeDrawer = document.getElementById('closeDrawer');
+const sessionsList = document.getElementById('sessionsList');
+const newChatBtn = document.getElementById('newChatBtn');
+function formatTime(iso) { try { const d = new Date(iso); const today = new Date(); const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); if (d.toDateString() === today.toDateString()) return 'Today ' + time; const yest = new Date(today); yest.setDate(yest.getDate() - 1); if (d.toDateString() === yest.toDateString()) return 'Yesterday ' + time; return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + time; } catch { return 'Unknown'; } }
+function renderSessions() { sessionsList.innerHTML = ''; if (sessions.length === 0) { sessionsList.innerHTML = '<p style="color:#8e8e93;font-size:14px;text-align:center;padding:20px;">No past conversations yet.</p>'; return; } const sorted = [...sessions].sort((a,b) => new Date(b.startedAt) - new Date(a.startedAt)); sorted.forEach(sess => { const div = document.createElement('div'); div.style.cssText = 'padding:12px;border-radius:10px;background:#f2f2f7;margin-bottom:8px;cursor:pointer;'; div.onclick = () => loadSession(sess.id); const preview = sess.messages.find(m => m.role === 'user'); const previewText = preview ? preview.content.slice(0, 60) : sess.title; div.innerHTML = '<div style="font-size:12px;color:#8e8e93;margin-bottom:4px;">' + formatTime(sess.startedAt) + '</div><div style="font-size:14px;color:#1c1c1e;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + previewText + '</div>'; sessionsList.appendChild(div); }); }
+function loadSession(id) { const sess = sessions.find(s => s.id === id); if (!sess) return; if (currentSession.messages.length > 0) saveCurrentSession(); currentSession = sess; history.length = 0; history.push(...sess.messages); chat.innerHTML = ''; sess.messages.forEach(m => { const cls = m.role === 'user' ? 'user' : 'bot'; const d = document.createElement('div'); d.className = 'msg ' + cls; if (cls === 'bot' && window.marked) { const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>'; const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">Copy</button>'; d.innerHTML = marked.parse(m.content) + footer + copyHtml; } else { d.textContent = m.content; } chat.appendChild(d); }); try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch {} drawer.style.display = 'none'; }
+function saveCurrentSession() { if (history.length === 0) return; currentSession.messages = [...history]; const idx = sessions.findIndex(s => s.id === currentSession.id); if (idx >= 0) sessions[idx] = currentSession; else sessions.push(currentSession); saveSessions(sessions); }
+function startNewSession() { if (currentSession.messages.length > 0) saveCurrentSession(); currentSession = { id: Date.now().toString(), startedAt: new Date().toISOString(), title: 'New conversation', messages: [] }; history.length = 0; try { localStorage.removeItem('lumera_history'); } catch {} chat.innerHTML = ''; drawer.style.display = 'none'; }
+menuBtn.onclick = () => { renderSessions(); drawer.style.display = 'block'; };
+closeDrawer.onclick = () => drawer.style.display = 'none';
+drawer.onclick = (e) => { if (e.target === drawer) drawer.style.display = 'none'; };
+newChatBtn.onclick = startNewSession;
+window.addEventListener('beforeunload', saveCurrentSession);
+window.addEventListener('pagehide', saveCurrentSession);
+
 </script>
+<div id="drawer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;"><div id="drawerPanel" style="position:absolute;top:0;left:0;bottom:0;width:82%;max-width:340px;background:#ffffff;padding:20px;overflow-y:auto;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;font-size:19px;font-weight:700;color:#1c1c1e;">Past conversations</h3><button id="closeDrawer" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:#6b7280;padding:4px 8px;">✕</button></div><button id="newChatBtn" style="width:100%;background:#8b5cf6;color:#fff;border:none;padding:12px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:16px;font-family:inherit;">+ New conversation</button><div id="sessionsList"></div></div></div>
 </body>
 </html>
