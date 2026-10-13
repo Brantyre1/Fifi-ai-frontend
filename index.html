@@ -131,6 +131,7 @@
     #voice { background: #f2f2f7; color: #1c1c1e; padding: 12px 14px; }
     #voice:not(.off) { background: #34c759; color: #ffffff; }
     #send { background: #8b5cf6; padding: 12px 22px; }
+#clear { background:#f2f2f7; color:#1c1c1e; padding:12px 14px; }
     .img-result {
       max-width: 100%; border-radius: 16px; margin: 8px 0;
       box-shadow: 0 4px 16px rgba(0,0,0,0.08);
@@ -149,12 +150,13 @@
 
   <div id="chat"></div>
 
-  <div class="bar">
+ <div class="bar">
     <button id="mic">🎤</button>
     <button id="voice" class="off">🔇</button>
+    <button id="clear" title="Clear chat">🗑️</button>
     <input id="input" placeholder="Ask Lumera anything..." />
     <button id="send">Send</button>
-  </div>
+</div>
 
   <div id="sig">The Brantyre ESL Teacher</div>
 
@@ -164,11 +166,47 @@ const input   = document.getElementById('input');
 const send    = document.getElementById('send');
 const mic     = document.getElementById('mic');
 const voiceBtn= document.getElementById('voice');
+const clearBtn=document.getElementById('clear');
 const history = [];
+// Load saved history from browser storage
+try {
+  const saved = localStorage.getItem('lumera_history');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) {
+      history.push(...parsed);
+      // Restore messages visually (skip the system prompt)
+      parsed.forEach(m => {
+        if (m.role === 'user' || m.role === 'assistant') {
+          const cls = m.role === 'user' ? 'user' : 'bot';
+          const d = document.createElement('div');
+          d.className = 'msg ' + cls;
+          if (cls === 'bot' && window.marked) {
+            const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+            d.innerHTML = marked.parse(m.content) + footer;
+          } else {
+            d.textContent = m.content;
+          }
+          chat.appendChild(d);
+        }
+      });
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+  }
+} catch (e) {
+  console.log('Memory load failed:', e);
+}
 const BACKEND = 'https://fifi-ai-backend.onrender.com';
 let voiceOn   = false;
 
 fetch(BACKEND + '/').catch(() => {});
+clearBtn.onclick=()=>{
+  if (confirm('Clear all chat history?')) {
+    history.length = 0;
+    try { localStorage.removeItem('lumera_history'); } catch(e) {}
+    chat.innerHTML = '';
+  }
+};
 
 voiceBtn.onclick = () => {
   voiceOn = !voiceOn;
@@ -219,7 +257,8 @@ async function ask(text) {
     return;
   }
 
-  history.push({ role: 'user', content: text });
+ history.push({role:'user',content:text});
+try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
   const loading = addMsg('🤭 Thinking...', 'bot');
   try {
     const r = await fetch(BACKEND + '/api/chat', {
@@ -235,8 +274,9 @@ async function ask(text) {
     } else {
       loading.innerHTML = '<div>' + reply + '</div>' + footer;
     }
-    history.push({ role: 'assistant', content: reply });
-    speak(reply);
+   history.push({role:'assistant',content:reply});
+try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
+speak(reply);
   } catch (e) { loading.textContent = 'Error: ' + e.message; }
 }
 
