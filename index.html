@@ -9,6 +9,7 @@
   <meta name="theme-color" content="#ffffff" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
 const menuBtn = document.getElementById('menuBtn');
+if (!menuBtn) { console.error('menuBtn missing'); }
 const drawer = document.getElementById('drawer');
 const closeDrawer = document.getElementById('closeDrawer');
 const sessionsList = document.getElementById('sessionsList');
@@ -219,6 +220,8 @@ window.addEventListener('pagehide', saveCurrentSession);
 <input type="file" id="camFile" accept="image/*" style="display:none" />
 
   <div id="sig">The Brantyre ESL Teacher</div>
+
+<div id="drawer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;"><div style="position:absolute;top:0;left:0;bottom:0;width:82%;max-width:340px;background:#fff;padding:20px;overflow-y:auto;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;font-size:19px;font-weight:700;">Past conversations</h3><button id="closeDrawer" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:#6b7280;padding:4px 8px;">✕</button></div><button id="newChatBtn" style="width:100%;background:#8b5cf6;color:#fff;border:none;padding:12px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:16px;font-family:inherit;">+ New conversation</button><div id="sessionsList"></div></div></div>
 
 <script>
 const chat    = document.getElementById('chat');
@@ -467,6 +470,6 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 </script>
-<div id="drawer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;"><div style="position:absolute;top:0;left:0;bottom:0;width:82%;max-width:340px;background:#fff;padding:20px;overflow-y:auto;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;font-size:19px;font-weight:700;">Past conversations</h3><button id="closeDrawer" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:#6b7280;padding:4px 8px;">✕</button></div><button id="newChatBtn" style="width:100%;background:#8b5cf6;color:#fff;border:none;padding:12px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:16px;font-family:inherit;">+ New conversation</button><div id="sessionsList"></div></div></div>
+
 </body>
 </html>
