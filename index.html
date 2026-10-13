@@ -160,6 +160,8 @@
     #voice:not(.off) { background: #34c759; color: #ffffff; }
     #send { background: #8b5cf6; padding: 12px 22px; }
 #clear { background:#f2f2f7; color:#1c1c1e; padding:12px 14px; }
+    #cam { background:#f2f2f7; color:#1c1c1e; padding:12px 14px; }
+    .msg img.sent-photo { max-width:200px; border-radius:12px; margin-top:8px; display:block; }
     .img-result {
       max-width: 100%; border-radius: 16px; margin: 8px 0;
       box-shadow: 0 4px 16px rgba(0,0,0,0.08);
@@ -181,10 +183,12 @@
  <div class="bar">
     <button id="mic">🎤</button>
     <button id="voice" class="off">🔇</button>
+    <button id="cam" title="Send a photo">📸</button>
     <button id="clear" title="Clear chat">🗑️</button>
     <input id="input" placeholder="Ask Lumera anything..." />
     <button id="send">Send</button>
 </div>
+<input type="file" id="camFile" accept="image/*" style="display:none" />
 
   <div id="sig">The Brantyre ESL Teacher</div>
 
@@ -195,6 +199,8 @@ const send    = document.getElementById('send');
 const mic     = document.getElementById('mic');
 const voiceBtn= document.getElementById('voice');
 const clearBtn=document.getElementById('clear');
+const camBtn = document.getElementById('cam');
+const camFile = document.getElementById('camFile');
 const history = [];
 // Profile — permanent facts about the user (survives chat clear)
 let profile = {};
@@ -242,6 +248,48 @@ clearBtn.onclick=()=>{
     try { localStorage.removeItem('lumera_history'); } catch(e) {}
     chat.innerHTML = '';
   }
+};
+
+camBtn.onclick = () => camFile.click();
+
+camFile.onchange = async () => {
+  const file = camFile.files[0];
+  if (!file) return;
+  camFile.value = '';
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const dataUrl = ev.target.result;
+    const d = document.createElement('div');
+    d.className = 'msg user';
+    d.innerHTML = '<img class="sent-photo" src="' + dataUrl + '" alt="photo" />';
+    chat.appendChild(d);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    const loading = addMsg('🔍 Looking at your photo...', 'bot');
+    try {
+      const r = await fetch(BACKEND + '/api/vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: dataUrl, question: 'Describe this image in detail.' }),
+      });
+      const data = await r.json();
+      const reply = data.reply || data.error || '';
+      const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+      const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
+      const combined = footer + copyHtml;
+      if (window.marked) {
+        loading.innerHTML = marked.parse(reply) + combined;
+      } else {
+        loading.innerHTML = '<div>' + reply + '</div>' + combined;
+      }
+      history.push({ role: 'user', content: '[sent a photo]' });
+      history.push({ role: 'assistant', content: reply });
+      try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
+      speak(reply);
+    } catch (e) {
+      loading.textContent = 'Error: ' + e.message;
+    }
+  };
+  reader.readAsDataURL(file);
 };
 
 voiceBtn.onclick = () => {
