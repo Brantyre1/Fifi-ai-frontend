@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lumera ✨</title>
+  <!-- The Brantyre ESL Teacher -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#7c3aed" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0b1e 0%, #1a0b2e 50%, #0d1230 100%);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* Animated gradient background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.15), transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.12), transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      text-align: center;
+      padding: 24px 16px 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Glowing avatar ring */
+    header img {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#1a0b2e, #1a0b2e) padding-box,
+        linear-gradient(135deg, #a78bfa, #60a5fa, #f472b6) border-box;
+      box-shadow:
+        0 0 20px rgba(167, 139, 250, 0.5),
+        0 0 40px rgba(96, 165, 250, 0.3);
+      animation: glow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 20px rgba(167, 139, 250, 0.5), 0 0 40px rgba(96, 165, 250, 0.3); }
+      to   { box-shadow: 0 0 30px rgba(167, 139, 250, 0.8), 0 0 60px rgba(96, 165, 250, 0.5); }
+    }
+
+    h1 {
+      margin: 12px 0 4px;
+      font-size: 26px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #c4b5fd, #93c5fd, #f9a8d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.5px;
+    }
+
+    header small {
+      opacity: 0.7;
+      font-size: 13px;
+      color: #c4b5fd;
+    }
+
+    #chat {
+      padding: 16px;
+      max-width: 720px;
+      margin: 0 auto;
+      padding-bottom: 120px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Message bubbles */
+    .msg {
+      padding: 12px 16px;
+      margin: 10px 0;
+      border-radius: 18px;
+      max-width: 88%;
+      word-wrap: break-word;
+      line-height: 1.55;
+      font-size: 15px;
+      animation: slideIn 0.35s ease-out;
+      position: relative;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .user {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+      color: #fff;
+    }
+
+    .bot {
+      background: linear-gradient(135deg, #1e1b3a, #2a1f4a);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Markdown inside bot replies */
+    .msg h1, .msg h2, .msg h3 {
+      margin: 12px 0 6px;
+      background: linear-gradient(135deg, #c4b5fd, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-size: 1.15em;
+    }
+    .msg p { margin: 8px 0; }
+    .msg code {
+      background: rgba(124, 58, 237, 0.25);
+      color: #f9a8d4;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    .msg pre {
+      background: rgba(15, 11, 30, 0.9);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      padding: 12px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 0.9em;
+    }
+    .msg pre code { background: none; padding: 0; color: #c4b5fd; }
+    .msg ul, .msg ol { padding-left: 22px; margin: 8px 0; }
+    .msg li { margin: 4px 0; }
+    .msg table {
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 0.88em;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .msg th {
+      background: rgba(124, 58, 237, 0.4);
+      padding: 8px;
+      text-align: left;
+    }
+    .msg td {
+      border: 1px solid rgba(167, 139, 250, 0.2);
+      padding: 6px 8px;
+    }
+    .msg hr {
+      border: none;
+      border-top: 1px solid rgba(167, 139, 250, 0.25);
+      margin: 12px 0;
+    }
+    .msg strong { color: #c4b5fd; font-weight: 700; }
+    .msg a { color: #93c5fd; text-decoration: underline; }
+
+    /* Signature footer */
+    .footer-sig {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(167, 139, 250, 0.3);
+      text-align: right;
+      font-size: 0.78em;
+      color: #a78bfa;
+      opacity: 0.85;
+      font-style: italic;
+      letter-spacing: 0.5px;
+    }
+
+    /* Input bar */
+    .bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 11, 30, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(167, 139, 250, 0.2);
+      z-index: 10;
+    }
+
+    input {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 24px;
+      border: 1.5px solid rgba(167, 139, 250, 0.3);
+      font-size: 15px;
+      background: rgba(26, 11, 46, 0.6);
+      color: #fff;
+      outline: none;
+      transition: all 0.25s;
+    }
+    input:focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 12px rgba(167, 139, 250, 0.4);
+      background: rgba(26, 11, 46, 0.85);
+    }
+    input::placeholder { color: rgba(196, 181, 253, 0.5); }
+
+    button {
+      padding: 12px 16px;
+      border-radius: 24px;
+      border: none;
+      background: linear-gradient(135deg, #7c3aed, #6366f1);
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+      font-weight: 600;
+    }
+    button:active { transform: scale(0.94); opacity: 0.85; }
+
+    #send {
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      padding: 12px 20px;
+    }
+    #send:hover { box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5); }
+
+    .mic.rec {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+      50%      { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
+    }
+
+    #voice { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    #voice:not(.off) {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Image results */
+    .img-result {
+      max-width: 100%;
+      border-radius: 14px;
+      margin: 8px 0;
+      border: 2px solid rgba(167, 139, 250, 0.3);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Hidden signature */
+    #sig { opacity: 0.001; position: absolute; top: 0; left: 0; pointer-events: none; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(167, 139, 250, 0.3);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="cover.png" alt="Lumera" onerror="this.style.display='none'"/>
+    <h1>Lumera ✨</h1>
+    <small>Your brilliant little AI companion</small>
+  </header>
+
+  <div id="chat"></div>
+
+  <div class="bar">
+    <button id="mic">🎤</button>
+    <button id="voice" class="off">🔇</button>
+    <input id="input" placeholder="Ask Lumera anything..." />
+    <button id="send">Send</button>
+  </div>
+
+  <div id="sig">The Brantyre ESL Teacher</div>
+
+<script>
+const chat    = document.getElementById('chat');
+const input   = document.getElementById('input');
+const send    = document.getElementById('send');
+const mic     = document.getElementById('mic');
+const voiceBtn= document.getElementById('voice');
+const history = [];
+const BACKEND = 'https://fifi-ai-backend.onrender.com';
+let voiceOn   = false;
+
+voiceBtn.onclick = () => {
+  voiceOn = !voiceOn;
+  voiceBtn.textContent = voiceOn ? '🔊' : '🔇';
+  voiceBtn.classList.toggle('off', !voiceOn);
+  if (!voiceOn) speechSynthesis.cancel();
+};
+
+function addMsg(text, cls) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  if (cls === 'bot' && window.marked) {
+    d.innerHTML = marked.parse(text);
+  } else {
+    d.textContent = text;
+  }
+  chat.appendChild(d);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  return d;
+}
+
+function addImg(url) {
+  const img = document.createElement('img');
+  img.src = url;
+  img.className = 'img-result';
+  chat.appendChild(img);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+async function ask(text) {
+  addMsg(text, 'user');
+  const low = text.toLowerCase();
+
+  if (/^(draw|paint|make a picture|create an image|generate an image)/.test(low)) {
+    const prompt = text.replace(/^(draw|paint|make a picture of|create an image of|generate an image of)\s*/i, '');
+    const loading = addMsg('🎨 Drawing...', 'bot');
+    try {
+      const r = await fetch(BACKEND + '/api/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await r.json();
+      loading.remove();
+      if (data.url) { addImg(data.url); speak('Here is your picture!'); }
+      else addMsg('Error: ' + (data.error || 'unknown'), 'bot');
+    } catch (e) { loading.textContent = 'Error: ' + e.message; }
+    return;
+  }
+
+  history.push({ role: 'user', content: text });
+  const loading = addMsg('💭 Thinking...', 'bot');
+  try {
+    const r = await fetch(BACKEND + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: history }),
+    });
+    const data = await r.json();
+    const reply = data.reply || data.error || '';
+    const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+    if (window.marked) {
+      loading.innerHTML = marked.parse(reply) + footer;
+    } else {
+      loading.innerHTML = '<div>' + reply + '</div>' + footer;
+    }
+    history.push({ role: 'assistant', content: reply });
+    speak(reply);
+  } catch (e) { loading.textContent = 'Error: ' + e.message; }
+}
+
+send.onclick = () => {
+  if (!input.value.trim()) return;
+  ask(input.value.trim());
+  input.value = '';
+};
+
+input.addEventListener('keydown', e => { if (e.key === 'Enter') send.click(); });
+
+mic.onclick = () => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return alert('Use Chrome or Brave for voice input.');
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.onresult = e => { input.value = e.results[0][0].transcript; send.click(); };
+  rec.onstart = () => mic.classList.add('rec');
+  rec.onend = () => mic.classList.remove('rec');
+  rec.onerror = e => alert('Mic error: ' + e.error);
+  rec.start();
+};
+
+function speak(text) {
+  if (!text) return;
+  if (!voiceOn) return;
+  const plain = text.replace(/[#*_`>\-]/g, '').slice(0, 400);
+  const u = new SpeechSynthesisUtterance(plain);
+  u.pitch = 1.7;
+  u.rate  = 1.05;
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(x => /female|samantha|zira|google uk english female/i.test(x.name));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+</script>
+</body>
+</html>
