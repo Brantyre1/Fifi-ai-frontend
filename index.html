@@ -83,7 +83,36 @@
     .msg hr { border: none; border-top: 1px solid #d1d1d6; margin: 12px 0; }
     .msg strong { color: #1c1c1e; font-weight: 700; }
     .msg a { color: #8b5cf6; text-decoration: none; font-weight: 500; }
-    .footer-sig {
+    .copy-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      font-size: 12px;
+      background: #ffffff;
+      border: 1px solid #d1d1d6;
+      border-radius: 8px;
+      color: #6b7280;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      -webkit-appearance: none;
+    }
+    .copy-btn:active {
+      background: #f2f2f7;
+      transform: scale(0.96);
+    }
+    .copy-btn.copied {
+  background: #34c759;
+  color: #ffffff;
+  border-color: #34c759;
+}
+.footer-sig {
+  margin-top: 14px; padding-top: 10px; border-top: 1px solid ...
+  text-align: right; font-size: 13px; color: #8b5cf6;
+  font-style: italic; letter-spacing: 0.2px;
+}
+.bar {
+  ...
       margin-top: 14px; padding-top: 10px; border-top: 1px solid #d1d1d6;
       text-align: right; font-size: 13px; color: #8b5cf6;
       font-style: italic; letter-spacing: 0.2px;
@@ -189,6 +218,8 @@ try {
           d.className = 'msg ' + cls;
           if (cls === 'bot' && window.marked) {
             const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
+const combined = footer + copyHtml;
             d.innerHTML = marked.parse(m.content) + footer;
           } else {
             d.textContent = m.content;
@@ -293,10 +324,10 @@ const r = await fetch(BACKEND + '/api/chat', {
     const reply = data.reply || data.error || '';
     const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
     if (window.marked) {
-      loading.innerHTML = marked.parse(reply) + footer;
-    } else {
-      loading.innerHTML = '<div>' + reply + '</div>' + footer;
-    }
+  loading.innerHTML = marked.parse(reply) + combined;
+} else {
+  loading.innerHTML = '<div>' + reply + '</div>' + combined;
+}
    history.push({role:'assistant',content:reply});
 try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
 speak(reply);
@@ -323,6 +354,24 @@ mic.onclick = () => {
   rec.start();
 };
 
+function copyMsg(btn) {
+  const msgDiv = btn.closest('.msg');
+  const clone = msgDiv.cloneNode(true);
+  const remove = clone.querySelectorAll('.footer-sig, .copy-btn');
+  remove.forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy';
+      btn.classList.remove('copied');
+    }, 1800);
+  }).catch(() => {
+    btn.textContent = '✗ Failed';
+    setTimeout(() => { btn.textContent = '📋 Copy'; }, 1800);
+  });
+}
 function speak(text) {
   if (!text) return;
   if (!voiceOn) return;
