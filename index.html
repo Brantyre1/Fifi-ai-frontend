@@ -168,6 +168,12 @@ const mic     = document.getElementById('mic');
 const voiceBtn= document.getElementById('voice');
 const clearBtn=document.getElementById('clear');
 const history = [];
+// Profile — permanent facts about the user (survives chat clear)
+let profile = {};
+try {
+  const savedProfile = localStorage.getItem('lumera_profile');
+  if (savedProfile) profile = JSON.parse(savedProfile);
+} catch (e) { console.log('Profile load failed:', e); }
 // Load saved history from browser storage
 try {
   const saved = localStorage.getItem('lumera_history');
@@ -201,7 +207,7 @@ let voiceOn   = false;
 
 fetch(BACKEND + '/').catch(() => {});
 clearBtn.onclick=()=>{
-  if (confirm('Clear all chat history?')) {
+  if (confirm('Clear chat? (Your name will be remembered)')) {
     history.length = 0;
     try { localStorage.removeItem('lumera_history'); } catch(e) {}
     chat.innerHTML = '';
@@ -258,14 +264,31 @@ async function ask(text) {
   }
 
  history.push({role:'user',content:text});
+
+// Detect if user is telling us their name
+const nameMatch = text.match(/(?:my name is|i am|i'm|call me)\s+([A-Z][a-z]+)/i);
+if (nameMatch) {
+  profile.name = nameMatch[1];
+  try { localStorage.setItem('lumera_profile', JSON.stringify(profile)); } catch(e) {}
+}
+
 try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
   const loading = addMsg('🤭 Thinking...', 'bot');
   try {
-    const r = await fetch(BACKEND + '/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: history }),
-    });
+   // Prepend profile info to the messages sent to Lumera
+const messagesToSend = [...history];
+if (profile.name) {
+  messagesToSend.unshift({
+    role: 'system',
+    content: 'The user\'s name is ' + profile.name + '. Always remember this.'
+  });
+}
+
+const r = await fetch(BACKEND + '/api/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ messages: messagesToSend }),
+});
     const data = await r.json();
     const reply = data.reply || data.error || '';
     const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
