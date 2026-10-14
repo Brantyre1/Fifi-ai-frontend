@@ -7,7 +7,33 @@
   <!-- The Brantyre ESL Teacher -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+// ===== MODE SWITCHER =====
+function setMode(mode) {
+  lumeraMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  try { localStorage.setItem('lumera_mode', mode); } catch(e) {}
+}
+
+// Restore saved mode
+try {
+  const saved = localStorage.getItem('lumera_mode');
+  if (saved) {
+    lumeraMode = saved;
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === saved);
+    });
+  }
+} catch(e) {}
+
+// Attach click handlers
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.onclick = () => setMode(btn.dataset.mode);
+});
+
+</script>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
@@ -222,17 +248,55 @@
       border-color: #8b5cf6;
     }
 
+  
+    .mode-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 12px 16px;
+      max-width: 720px;
+      margin: 0 auto;
+      justify-content: center;
+      border-bottom: 1px solid #f0f0f5;
+    }
+    .mode-btn {
+      padding: 6px 12px;
+      background: #f2f2f7;
+      border: 1px solid #e5e5ea;
+      border-radius: 16px;
+      color: #1c1c1e;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      -webkit-appearance: none;
+      user-select: none;
+    }
+    .mode-btn.active {
+      background: #8b5cf6;
+      color: #ffffff;
+      border-color: #8b5cf6;
+    }
+
   </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css"></head>
 <body>
   <header>
-    <button id="eslBtn" title="ESL Teacher Mode" style="position:absolute;top:18px;right:16px;background:#f2f2f7;border:1px solid #e5e5ea;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;color:#8e8e93;padding:8px 12px;line-height:1;">ESL</button>
     <button id="menuBtn" style="position:absolute;top:18px;left:16px;background:transparent;border:none;font-size:26px;cursor:pointer;color:#1c1c1e;padding:8px;line-height:1;">☰</button>
     <img src="cover.png" alt="Lumera" onerror="this.style.display='none'"/>
     <h1>Lumera ✨</h1>
     <small>Your brilliant little AI companion</small>
   </header>
+<div id="modeBar" class="mode-bar">
+    <button class="mode-btn active" data-mode="normal">💬 Normal</button>
+    <button class="mode-btn" data-mode="esl">🎓 ESL Teacher</button>
+    <button class="mode-btn" data-mode="coder">💻 Coder</button>
+    <button class="mode-btn" data-mode="kid">🎨 Kid</button>
+    <button class="mode-btn" data-mode="pro">🧑‍💼 Pro</button>
+  </div>
+
 
   <div id="chat"></div>
 <div id="promptsContainer" class="prompts-container"></div>
@@ -431,7 +495,7 @@ if (profile.name) {
 const r = await fetch(BACKEND + '/api/chat', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ messages: messagesToSend, mode: eslMode ? 'esl' : 'normal' }),
+  body: JSON.stringify({ messages: messagesToSend, mode: lumeraMode }),
 });
     const data = await r.json();
     const reply = data.reply || data.error || '';
@@ -667,35 +731,7 @@ window.addEventListener('load', () => {
 // Hide prompts on first message; show again if chat is cleared
 
 
-// ===== ESL TEACHER MODE =====
-let eslMode = false;
-const eslBtn = document.getElementById('eslBtn');
 
-// Restore preference
-try {
-  const savedMode = localStorage.getItem('lumera_esl_mode');
-  if (savedMode === 'true') {
-    eslMode = true;
-    eslBtn.classList.add('active');
-  }
-} catch(e) {}
-
-eslBtn.onclick = () => {
-  eslMode = !eslMode;
-  eslBtn.classList.toggle('active', eslMode);
-  try { localStorage.setItem('lumera_esl_mode', eslMode ? 'true' : 'false'); } catch(e) {}
-  // Show a small system message in the chat
-  const notice = document.createElement('div');
-  notice.className = 'msg bot';
-  notice.style.textAlign = 'center';
-  notice.style.fontSize = '13px';
-  notice.style.color = '#8e8e93';
-  notice.textContent = eslMode
-    ? '📚 ESL Teacher Mode enabled. Lumera will now correct your English and teach as you chat.'
-    : 'ESL Teacher Mode disabled. Lumera is back to normal chat mode.';
-  chat.appendChild(notice);
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-};
 </script>
 </body>
 </html>
