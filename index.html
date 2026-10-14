@@ -7,33 +7,7 @@
   <!-- The Brantyre ESL Teacher -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
-// ===== MODE SWITCHER =====
-function setMode(mode) {
-  lumeraMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === mode);
-  });
-  try { localStorage.setItem('lumera_mode', mode); } catch(e) {}
-}
-
-// Restore saved mode
-try {
-  const saved = localStorage.getItem('lumera_mode');
-  if (saved) {
-    lumeraMode = saved;
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.mode === saved);
-    });
-  }
-} catch(e) {}
-
-// Attach click handlers
-document.querySelectorAll('.mode-btn').forEach(btn => {
-  btn.onclick = () => setMode(btn.dataset.mode);
-});
-
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
@@ -320,6 +294,7 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 <div id="drawer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;"><div style="position:absolute;top:0;left:0;bottom:0;width:82%;max-width:340px;background:#fff;padding:20px;overflow-y:auto;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;font-size:19px;font-weight:700;">Past conversations</h3><button id="closeDrawer" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:#6b7280;padding:4px 8px;">✕</button></div><button id="newChatBtn" style="width:100%;background:#8b5cf6;color:#fff;border:none;padding:12px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:16px;font-family:inherit;">+ New conversation</button><div id="sessionsList"></div></div></div>
 
 <script>
+let lumeraMode = 'normal';
 const chat    = document.getElementById('chat');
 const input   = document.getElementById('input');
 const send    = document.getElementById('send');
@@ -328,6 +303,7 @@ const voiceBtn= document.getElementById('voice');
 const camBtn = document.getElementById('cam');
 const camFile = document.getElementById('camFile');
 const history = [];
+
 // Profile — permanent facts about the user (survives chat clear)
 let profile = {};
 try {
@@ -732,6 +708,31 @@ window.addEventListener('load', () => {
 
 
 
+
+// ===== MODE SWITCHER =====
+function setMode(mode) {
+  lumeraMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  try { localStorage.setItem('lumera_mode', mode); } catch(e) {}
+}
+
+// Restore saved mode
+try {
+  const saved = localStorage.getItem('lumera_mode');
+  if (saved) {
+    lumeraMode = saved;
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === saved);
+    });
+  }
+} catch(e) {}
+
+// Attach click handlers
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.onclick = () => setMode(btn.dataset.mode);
+});
 </script>
 </body>
 </html>
