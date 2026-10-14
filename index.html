@@ -132,6 +132,35 @@ button#send:active { opacity: 0.85; }
 #drawerPanel { position: absolute; top: 0; left: 0; bottom: 0; width: 82%; max-width: 340px; background: #fff; padding: 24px 20px; overflow-y: auto; box-shadow: 4px 0 20px rgba(0,0,0,0.08); }
 #sig { opacity: 0.001; position: absolute; top: 0; left: 0; pointer-events: none; }
 
+
+    /* Restore horizontal prompt chips */
+    .prompts-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px 20px;
+      max-width: 720px;
+      margin: 0 auto;
+      justify-content: center;
+      flex-direction: row;
+    }
+    .prompt-chip {
+      padding: 10px 16px;
+      background: #f5f5f7;
+      border: 1px solid transparent;
+      border-radius: 22px;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+      transition: all 0.15s;
+      width: auto;
+    }
+    .prompt-chip::before { content: none !important; display: none !important; }
+    .prompt-chip:active { background: #1a1a1a; color: #fff; }
+
 </style>
 </head>
 <body>
