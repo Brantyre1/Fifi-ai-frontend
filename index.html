@@ -408,33 +408,48 @@ setTimeout(() => {
 // Detect VOCAB_SUGGEST in every bot reply and save it
 function extractVocab(text) {
   var output = text;
+  var found = [];
 
-  // Priority 1: VOCAB_SUGGEST marker (explicit)
-  var match = output.match(/VOCAB_SUGGEST:\s*([^|]+)\|\s*(.+)/i);
-  if (match) {
-    addVocab(match[1].trim(), match[2].trim());
-    return output.replace(/VOCAB_SUGGEST:.*$/im, '').trim();
+  // Priority 1: VOCAB_SUGGEST markers (may be multiple)
+  var markerRegex = /VOCAB_SUGGEST:\s*([^|]+?)\s*\|\s*([^\n]+)/gi;
+  var markerMatch;
+  while ((markerMatch = markerRegex.exec(output)) !== null) {
+    found.push({ word: markerMatch[1].trim(), definition: markerMatch[2].trim() });
   }
-
-  // Priority 2: Fallback detection - common ESL teaching patterns
-  var mA = output.match(/the word ['"]?([A-Za-z]{3,20})['"]?\s+(?:means|is|refers to)\s+([^.\n]+)/i);
-  if (mA) {
-    addVocab(mA[1], mA[2].trim().slice(0, 150));
+  if (found.length > 0) {
+    output = output.replace(/VOCAB_SUGGEST:.*$/gim, '').trim();
+    output = output.replace(/\n{3,}/g, '\n\n').trim();
+    found.forEach(function(v) { addVocab(v.word, v.definition); });
     return output;
   }
 
-  var mB = output.match(/\*?([A-Z][a-z]{2,20})\*?\s*\((?:adjective|noun|verb|adverb)\)\s+(?:means|is|refers to)\s+([^.\n]+)/i);
-  if (mB) {
-    addVocab(mB[1], mB[2].trim().slice(0, 150));
-    return output;
+  // Priority 2: Fallback — detect multiple patterns
+  // Pattern A: "Word (adjective|noun|verb|adverb) - definition" or "means definition"
+  var reB = /\*?\*([A-Z][a-z]{2,20})\*\*\s*\((?:adjective|noun|verb|adverb|adverb)\)\s*[-–—]\s*([^.\n]+)/gi;
+  var mB;
+  while ((mB = reB.exec(output)) !== null) {
+    found.push({ word: mB[1], definition: mB[2].trim().slice(0, 150) });
   }
 
-  var mC = output.match(/(?:learn|learning|study|studying) the word ['"]?([A-Za-z]{3,20})['"]?/i);
-  if (mC) {
-    var defMatch = output.match(/(?:means|is defined as|refers to)\s+([^.\n]+)/i);
-    addVocab(mC[1], defMatch ? defMatch[1].trim().slice(0, 150) : 'See reply for definition');
+  // Pattern A2: "**Word** (adjective) means ..."
+  if (found.length === 0) {
+    var reB2 = /\*?\*([A-Z][a-z]{2,20})\*\*\s*\((?:adjective|noun|verb|adverb)\)\s+(?:means|is|refers to|-|–)\s*([^.\n]+)/gi;
+    var mB2;
+    while ((mB2 = reB2.exec(output)) !== null) {
+      found.push({ word: mB2[1], definition: mB2[2].trim().slice(0, 150) });
+    }
   }
 
+  // Pattern C: "the word 'X' means Y"
+  if (found.length === 0) {
+    var reC = /the word [\'"]?([A-Za-z]{3,20})[\'"]?\s+(?:means|is|refers to)\s+([^.\n]+)/gi;
+    var mC;
+    while ((mC = reC.exec(output)) !== null) {
+      found.push({ word: mC[1], definition: mC[2].trim().slice(0, 150) });
+    }
+  }
+
+  found.forEach(function(v) { addVocab(v.word, v.definition); });
   return output;
 }
 
