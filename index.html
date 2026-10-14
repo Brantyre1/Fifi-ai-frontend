@@ -6,24 +6,7 @@
 <title>Lumera ✨</title>
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#ffffff" />
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
-// Hide initial loader as soon as the page paints
-(function hideLoader() {
-  function hide() {
-    var el = document.getElementById('initial-loader');
-    if (el) {
-      el.classList.add('hidden');
-      setTimeout(function() { el.remove(); }, 400);
-    }
-  }
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(hide, 50);
-  } else {
-    document.addEventListener('DOMContentLoaded', hide);
-  }
-})();
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <style>
@@ -517,6 +500,22 @@ function extractVocab(text) {
   return output;
 }
 
+
+// Hide initial loader as soon as the page paints
+(function hideLoader() {
+  function hide() {
+    var el = document.getElementById('initial-loader');
+    if (el) {
+      el.classList.add('hidden');
+      setTimeout(function() { el.remove(); }, 400);
+    }
+  }
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(hide, 50);
+  } else {
+    document.addEventListener('DOMContentLoaded', hide);
+  }
+})();
 </script>
 </body>
 </html>
