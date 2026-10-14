@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Lumera ✨</title>
+  <!-- The Brantyre ESL Teacher -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ffffff" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+                   'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background: #ffffff;
+      color: #1c1c1e;
+      font-size: 17px;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+    }
+    header { text-align: center; padding: 32px 16px 16px; }
+    header img {
+      width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+      border: 2px solid #f0f0f5; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    h1 {
+      margin: 14px 0 2px; font-size: 28px; font-weight: 700;
+      letter-spacing: -0.5px; color: #1c1c1e;
+    }
+    header small { font-size: 15px; color: #8e8e93; letter-spacing: -0.2px; }
+    #chat { padding: 12px 16px 120px; max-width: 720px; margin: 0 auto; }
+    .msg {
+      padding: 12px 16px; margin: 8px 0; border-radius: 20px;
+      max-width: 85%; word-wrap: break-word; line-height: 1.5;
+      font-size: 16px; letter-spacing: -0.01em;
+      animation: slideIn 0.28s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(6px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .user {
+      background: #8b5cf6; color: #ffffff; margin-left: auto;
+      border-bottom-right-radius: 6px;
+    }
+    .bot {
+      background: #f2f2f7; color: #1c1c1e;
+      border-bottom-left-radius: 6px;
+    }
+    .msg h1, .msg h2, .msg h3 {
+      margin: 14px 0 6px; color: #1c1c1e; font-size: 1.1em;
+      font-weight: 700; letter-spacing: -0.3px;
+    }
+    .msg h1:first-child, .msg h2:first-child, .msg h3:first-child { margin-top: 0; }
+    .msg p { margin: 8px 0; }
+    .msg p:first-child { margin-top: 0; }
+    .msg p:last-child { margin-bottom: 0; }
+    .msg code {
+      background: #e5e5ea; color: #6d28d9; padding: 2px 6px;
+      border-radius: 5px; font-family: 'SF Mono','Menlo','Courier New',monospace;
+      font-size: 0.9em;
+    }
+    .msg pre {
+      background: #1c1c1e; color: #f2f2f7; padding: 14px;
+      border-radius: 12px; overflow-x: auto; font-size: 0.88em;
+      margin: 10px 0; line-height: 1.4;
+    }
+    .msg pre code { background: none; color: inherit; padding: 0; }
+    .msg ul, .msg ol { padding-left: 22px; margin: 8px 0; }
+    .msg li { margin: 4px 0; }
+    .msg table {
+      border-collapse: collapse; margin: 10px 0; font-size: 0.9em;
+      width: 100%; border-radius: 10px; overflow: hidden;
+    }
+    .msg th {
+      background: #e5e5ea; color: #1c1c1e; padding: 8px 10px;
+      text-align: left; font-weight: 600;
+    }
+    .msg td { border-top: 1px solid #e5e5ea; padding: 8px 10px; }
+    .msg hr { border: none; border-top: 1px solid #d1d1d6; margin: 12px 0; }
+    .msg strong { color: #1c1c1e; font-weight: 700; }
+    .msg a { color: #8b5cf6; text-decoration: none; font-weight: 500; }
+    .copy-btn {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 8px;
+      font-size: 10px;
+      background: #ffffff;
+      border: 1px solid #e5e5ea;
+      border-radius: 6px;
+      color: #8e8e93;
+      cursor: pointer;
+      font-family: inherit;
+      opacity: 0.7;
+      transition: all 0.15s;
+      -webkit-appearance: none;
+      line-height: 1.4;
+    }
+    .copy-btn:active {
+      background: #f2f2f7;
+      transform: scale(0.96);
+    }
+    .copy-btn.copied {
+  background: #34c759;
+  color: #ffffff;
+  border-color: #34c759;
+}
+.footer-sig {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #d1d1d6;
+  text-align: right;
+  font-size: 13px;
+  color: #8b5cf6;
+  font-style: italic;
+  letter-spacing: 0.2px;
+}
+.bar {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 8px 12px;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-top: 1px solid #e5e5ea; z-index: 10;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+    .icons-row { display: flex; gap: 6px; }
+    .input-row { display: flex; gap: 6px; align-items: center; }
+    input {
+      flex: 1; padding: 12px 18px; border-radius: 22px;
+      border: 1px solid #e5e5ea; font-size: 16px;
+      background: #f2f2f7; color: #1c1c1e; outline: none;
+      font-family: inherit; letter-spacing: -0.01em;
+      transition: all 0.2s ease; -webkit-appearance: none;
+    }
+    input:focus {
+      border-color: #8b5cf6; background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+    }
+    input::placeholder { color: #8e8e93; }
+    button {
+      padding: 12px 16px; border-radius: 22px; border: none;
+      background: #8b5cf6; color: #ffffff; font-size: 15px;
+      font-weight: 600; font-family: inherit; cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      letter-spacing: -0.2px; min-height: 44px; min-width: 44px;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-appearance: none;
+    }
+    button:active { transform: scale(0.94); opacity: 0.8; }
+    #mic { background: #f2f2f7; color: #1c1c1e; padding: 12px 14px; }
+    #mic.rec {
+      background: #ff3b30; color: #ffffff;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,59,48,0.5); }
+      50%     { box-shadow: 0 0 0 10px rgba(255,59,48,0); }
+    }
+    #voice { background: #f2f2f7; color: #1c1c1e; padding: 12px 14px; }
+    #voice:not(.off) { background: #34c759; color: #ffffff; }
+    #send { background: #8b5cf6; padding: 10px 14px; font-size:14px; }
+#clear { background:#f2f2f7; color:#1c1c1e; padding:8px 10px; font-size:14px; min-width:40px; }
+    #cam { background:#f2f2f7; color:#1c1c1e; padding:8px 10px; font-size:14px; min-width:40px; }
+    .msg img.sent-photo { max-width:200px; border-radius:12px; margin-top:8px; display:block; }
+    .img-result {
+      max-width: 100%; border-radius: 16px; margin: 8px 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    #sig { opacity: 0.001; position: absolute; top: 0; left: 0; pointer-events: none; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="cover.png" alt="Lumera" onerror="this.style.display='none'"/>
+    <h1>Lumera ✨</h1>
+    <small>Your brilliant little AI companion</small>
+  </header>
+
+  <div id="chat"></div>
+
+ <div class="bar">
+    <div class="icons-row">
+      <button id="mic">🎤</button>
+      <button id="cam" title="Send a photo">📸</button>
+      <button id="voice" class="off">🔇</button>
+      <button id="clear" title="Clear chat">🗑️</button>
+    </div>
+    <div class="input-row">
+      <input id="input" placeholder="Ask Lumera anything..." />
+      <button id="send">Send</button>
+    </div>
+  </div>
+<input type="file" id="camFile" accept="image/*" style="display:none" />
+
+  <div id="sig">The Brantyre ESL Teacher</div>
+
+<script>
+const chat    = document.getElementById('chat');
+const input   = document.getElementById('input');
+const send    = document.getElementById('send');
+const mic     = document.getElementById('mic');
+const voiceBtn= document.getElementById('voice');
+const clearBtn=document.getElementById('clear');
+const camBtn = document.getElementById('cam');
+const camFile = document.getElementById('camFile');
+const history = [];
+// Profile — permanent facts about the user (survives chat clear)
+let profile = {};
+try {
+  const savedProfile = localStorage.getItem('lumera_profile');
+  if (savedProfile) profile = JSON.parse(savedProfile);
+} catch (e) { console.log('Profile load failed:', e); }
+// Load saved history from browser storage
+try {
+  const saved = localStorage.getItem('lumera_history');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) {
+      history.push(...parsed);
+      // Restore messages visually (skip the system prompt)
+      parsed.forEach(m => {
+        if (m.role === 'user' || m.role === 'assistant') {
+          const cls = m.role === 'user' ? 'user' : 'bot';
+          const d = document.createElement('div');
+          d.className = 'msg ' + cls;
+          if (cls === 'bot' && window.marked) {
+            const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
+const combined = footer + copyHtml;
+d.innerHTML = marked.parse(m.content) + combined;
+          } else {
+            d.textContent = m.content;
+          }
+          chat.appendChild(d);
+        }
+      });
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+  }
+} catch (e) {
+  console.log('Memory load failed:', e);
+}
+const BACKEND = 'https://fifi-ai-backend.onrender.com';
+let voiceOn   = false;
+
+fetch(BACKEND + '/').catch(() => {});
+clearBtn.onclick=()=>{
+  if (confirm('Clear chat? (Your name will be remembered)')) {
+    history.length = 0;
+    try { localStorage.removeItem('lumera_history'); } catch(e) {}
+    chat.innerHTML = '';
+  }
+};
+
+camBtn.onclick = () => camFile.click();
+
+camFile.onchange = async () => {
+  const file = camFile.files[0];
+  if (!file) return;
+  camFile.value = '';
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const dataUrl = ev.target.result;
+    const d = document.createElement('div');
+    d.className = 'msg user';
+    d.innerHTML = '<img class="sent-photo" src="' + dataUrl + '" alt="photo" />';
+    chat.appendChild(d);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    const loading = addMsg('🔍 Looking at your photo...', 'bot');
+    try {
+      const r = await fetch(BACKEND + '/api/vision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: dataUrl, question: 'Describe this image in detail.' }),
+      });
+      const data = await r.json();
+      const reply = data.reply || data.error || '';
+      const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+      const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
+      const combined = footer + copyHtml;
+      if (window.marked) {
+        loading.innerHTML = marked.parse(reply) + combined;
+      } else {
+        loading.innerHTML = '<div>' + reply + '</div>' + combined;
+      }
+      history.push({ role: 'user', content: '[sent a photo]' });
+      history.push({ role: 'assistant', content: reply });
+      try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
+      speak(reply);
+    } catch (e) {
+      loading.textContent = 'Error: ' + e.message;
+    }
+  };
+  reader.readAsDataURL(file);
+};
+
+voiceBtn.onclick = () => {
+  voiceOn = !voiceOn;
+  voiceBtn.textContent = voiceOn ? '🔊' : '🔇';
+  voiceBtn.classList.toggle('off', !voiceOn);
+  if (!voiceOn) speechSynthesis.cancel();
+};
+
+function addMsg(text, cls) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  if (cls === 'bot' && window.marked) {
+    d.innerHTML = marked.parse(text);
+  } else {
+    d.textContent = text;
+  }
+  chat.appendChild(d);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  return d;
+}
+
+function addImg(url) {
+  const img = document.createElement('img');
+  img.src = url;
+  img.className = 'img-result';
+  chat.appendChild(img);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+async function ask(text) {
+  addMsg(text, 'user');
+  const low = text.toLowerCase();
+
+  if (/^(draw|paint|make a picture|create an image|generate an image)/.test(low)) {
+    const prompt = text.replace(/^(draw|paint|make a picture of|create an image of|generate an image of)\s*/i, '');
+    const loading = addMsg('🎨 Drawing...', 'bot');
+    try {
+      const r = await fetch(BACKEND + '/api/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await r.json();
+      loading.remove();
+      if (data.url) { addImg(data.url); speak('Here is your picture!'); }
+      else addMsg('Error: ' + (data.error || 'unknown'), 'bot');
+    } catch (e) { loading.textContent = 'Error: ' + e.message; }
+    return;
+  }
+
+ history.push({role:'user',content:text});
+
+// Detect if user is telling us their name
+const nameMatch = text.match(/(?:my name is|i am|i'm|call me)\s+([A-Z][a-z]+)/i);
+if (nameMatch) {
+  profile.name = nameMatch[1];
+  try { localStorage.setItem('lumera_profile', JSON.stringify(profile)); } catch(e) {}
+}
+
+try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
+  const loading = addMsg('🤭 Thinking...', 'bot');
+  try {
+   // Prepend profile info to the messages sent to Lumera
+const messagesToSend = [...history];
+if (profile.name) {
+  messagesToSend.unshift({
+    role: 'system',
+    content: 'The user\'s name is ' + profile.name + '. Always remember this.'
+  });
+}
+
+const r = await fetch(BACKEND + '/api/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ messages: messagesToSend }),
+});
+    const data = await r.json();
+    const reply = data.reply || data.error || '';
+    const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
+const combined = footer + copyHtml;
+if (window.marked) {
+  loading.innerHTML = marked.parse(reply) + combined;
+} else {
+  loading.innerHTML = '<div>' + reply + '</div>' + combined;
+}
+history.push({ role: 'assistant', content: reply });
+try { localStorage.setItem('lumera_history', JSON.stringify(history)); } catch(e) {}
+speak(reply);
+  } catch (e) { loading.textContent = 'Error: ' + e.message; }
+}
+
+send.onclick = () => {
+  if (!input.value.trim()) return;
+  ask(input.value.trim());
+  input.value = '';
+};
+
+input.addEventListener('keydown', e => { if (e.key === 'Enter') send.click(); });
+
+mic.onclick = () => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return alert('Use Chrome or Brave for voice input.');
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.onresult = e => { input.value = e.results[0][0].transcript; send.click(); };
+  rec.onstart = () => mic.classList.add('rec');
+  rec.onend = () => mic.classList.remove('rec');
+  rec.onerror = e => alert('Mic error: ' + e.error);
+  rec.start();
+};
+
+function copyMsg(btn) {
+  const msgDiv = btn.closest('.msg');
+  const clone = msgDiv.cloneNode(true);
+  const remove = clone.querySelectorAll('.footer-sig, .copy-btn');
+  remove.forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy';
+      btn.classList.remove('copied');
+    }, 1800);
+  }).catch(() => {
+    btn.textContent = '✗ Failed';
+    setTimeout(() => { btn.textContent = '📋 Copy'; }, 1800);
+  });
+}
+function speak(text) {
+  if (!text) return;
+  if (!voiceOn) return;
+  const plain = text.replace(/[#*_`>\-]/g, '').slice(0, 400);
+  const u = new SpeechSynthesisUtterance(plain);
+  u.pitch = 1.7;
+  u.rate  = 1.05;
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(x => /female|samantha|zira|google uk english female/i.test(x.name));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+</script>
+</body>
+</html>
