@@ -220,7 +220,52 @@ const closeDrawer = document.getElementById('closeDrawer');
 const sessionsList = document.getElementById('sessionsList');
 const newChatBtn = document.getElementById('newChatBtn');
 function formatTime(iso) { try { const d = new Date(iso); const t = new Date(); const tt = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); if (d.toDateString() === t.toDateString()) return 'Today ' + tt; const y = new Date(t); y.setDate(y.getDate() - 1); if (d.toDateString() === y.toDateString()) return 'Yesterday ' + tt; return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + tt; } catch { return 'Unknown'; } }
-function renderSessions() { sessionsList.innerHTML = ''; const ex = JSON.parse(localStorage.getItem('lumera_sessions') || '[]'); if (ex.length === 0) { sessionsList.innerHTML = '<p style="color:#8e8e93;font-size:14px;text-align:center;padding:20px;">No past conversations yet.</p>'; return; } [...ex].sort((a,b) => new Date(b.startedAt) - new Date(a.startedAt)).forEach(sess => { const div = document.createElement('div'); div.style.cssText = 'padding:12px;border-radius:10px;background:#f5f5f7;margin-bottom:8px;cursor:pointer;'; div.onclick = () => loadSession(sess.id); const p = sess.messages.find(m => m.role === 'user'); const preview = p ? p.content.slice(0, 60) : 'Past conversation'; div.innerHTML = '<div style="font-size:12px;color:#8e8e93;margin-bottom:4px;">' + formatTime(sess.startedAt) + '</div><div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + preview + '</div>'; sessionsList.appendChild(div); }); }
+function renderSessions() {
+  sessionsList.innerHTML = '';
+  const ex = JSON.parse(localStorage.getItem('lumera_sessions') || '[]');
+  if (ex.length === 0) {
+    sessionsList.innerHTML = '<p style="color:#8e8e93;font-size:14px;text-align:center;padding:20px;">No past conversations yet.</p>';
+    return;
+  }
+  [...ex].sort((a,b) => new Date(b.startedAt) - new Date(a.startedAt)).forEach(sess => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;align-items:stretch;gap:6px;margin-bottom:8px;';
+
+    const div = document.createElement('div');
+    div.style.cssText = 'flex:1;padding:12px;border-radius:10px;background:#f5f5f7;cursor:pointer;overflow:hidden;';
+    div.onclick = () => loadSession(sess.id);
+    const p = sess.messages.find(m => m.role === 'user');
+    const preview = sess.title && sess.title !== 'Past conversation' ? sess.title : (p ? p.content.slice(0, 60) : 'Past conversation');
+    div.innerHTML = '<div style="font-size:12px;color:#8e8e93;margin-bottom:4px;">' + formatTime(sess.startedAt) + '</div><div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + preview + '</div>';
+
+    const editBtn = document.createElement('button');
+    editBtn.textContent = '✏️';
+    editBtn.title = 'Rename';
+    editBtn.style.cssText = 'background:#f5f5f7;border:none;border-radius:10px;padding:0 12px;font-size:16px;cursor:pointer;flex-shrink:0;';
+    editBtn.onclick = (e) => {
+      e.stopPropagation();
+      renameSession(sess.id);
+    };
+
+    wrapper.appendChild(div);
+    wrapper.appendChild(editBtn);
+    sessionsList.appendChild(wrapper);
+  });
+}
+
+function renameSession(id) {
+  const ex = JSON.parse(localStorage.getItem('lumera_sessions') || '[]');
+  const sess = ex.find(s => s.id === id);
+  if (!sess) return;
+  const current = sess.title && sess.title !== 'Past conversation' ? sess.title : '';
+  const name = prompt('Rename this conversation:', current);
+  if (name === null) return;
+  const trimmed = name.trim();
+  if (trimmed === '') return;
+  sess.title = trimmed.slice(0, 80);
+  try { localStorage.setItem('lumera_sessions', JSON.stringify(ex)); } catch(e) {}
+  renderSessions();
+}
 function loadSession(id) { const ex = JSON.parse(localStorage.getItem('lumera_sessions') || '[]'); const sess = ex.find(s => s.id === id); if (!sess) return; history.length = 0; history.push(...sess.messages); chat.innerHTML = ''; sess.messages.forEach(m => { const cls = m.role === 'user' ? 'user' : 'bot'; const d = document.createElement('div'); d.className = 'msg ' + cls; if (cls === 'bot' && window.marked) { const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>'; const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>'; d.innerHTML = marked.parse(m.content) + footer + copyHtml; applyHighlight(d); } else { d.textContent = m.content; } chat.appendChild(d); }); window.scrollTo(0, document.body.scrollHeight); drawer.style.display = 'none'; }
 menuBtn.onclick = () => { renderSessions(); drawer.style.display = 'block'; };
 closeDrawer.onclick = () => drawer.style.display = 'none';
