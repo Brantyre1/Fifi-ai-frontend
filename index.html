@@ -306,19 +306,7 @@ function renderSessions() {
     const p = sess.messages.find(m => m.role === 'user');
     const preview = sess.title && sess.title !== 'Past conversation' ? sess.title : (p ? p.content.slice(0, 60) : 'Past conversation');
     div.innerHTML = '<div style="font-size:12px;color:#8e8e93;margin-bottom:4px;">' + formatTime(sess.startedAt) + '</div><div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + preview + '</div>';
-
-    const editBtn = document.createElement('button');
-    editBtn.textContent = '✏️';
-    editBtn.title = 'Rename';
-    editBtn.style.cssText = 'background:#f5f5f7;border:none;border-radius:10px;padding:0 12px;font-size:16px;cursor:pointer;flex-shrink:0;';
-    editBtn.onclick = (e) => {
-      e.stopPropagation();
-      renameSession(sess.id);
-    };
-
-    wrapper.appendChild(div);
-    wrapper.appendChild(editBtn);
-    sessionsList.appendChild(wrapper);
+sessionsList.appendChild(div);
   });
 }
 
