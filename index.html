@@ -223,7 +223,30 @@ function copyMsg(btn) {
   const text = clone.innerText.trim();
   navigator.clipboard.writeText(text).then(() => { btn.textContent = '✓ Copied'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 1800); }).catch(() => { btn.textContent = '✗ Failed'; setTimeout(() => { btn.textContent = '📋 Copy'; }, 1800); });
 }
-function speak(text) { if (!text || !voiceOn) return; const plain = text.replace(/[#*_`>\-]/g, '').slice(0, 400); const u = new SpeechSynthesisUtterance(plain); u.pitch = 1.7; u.rate = 1.05; speechSynthesis.speak(u); }
+async function speak(text) {
+  if (!text || !voiceOn) return;
+  const plain = text.replace(/[#*_>]/g, " ").slice(0, 800);
+  if (!plain) return;
+  try {
+    const r = await fetch(BACKEND + '/api/voice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: plain })
+    });
+    if (!r.ok) throw new Error('ElevenLabs failed: ' + r.status);
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.play();
+    audio.onended = () => URL.revokeObjectURL(url);
+  } catch(e) {
+    console.warn('ElevenLabs failed, using browser TTS:', e);
+    const u = new SpeechSynthesisUtterance(plain.slice(0, 400));
+    u.pitch = 1.7;
+    u.rate = 1.05;
+    speechSynthesis.speak(u);
+  }
+}
 
 const PROMPT_IDEAS = ["Explain photosynthesis","Write Python to reverse a string","Fun fact about Kenya","Write a professional email","Translate hello to Swahili","What is 17 x 24?","Short story about a robot","How the internet works","5 study tips","HTML for a login form"];
 function showPrompts() { const c = document.getElementById('promptsContainer'); if (!c) return; c.innerHTML = ''; [...PROMPT_IDEAS].sort(() => Math.random() - 0.5).slice(0, 6).forEach(t => { const chip = document.createElement('div'); chip.className = 'prompt-chip'; chip.textContent = t; chip.onclick = () => { hidePrompts(); ask(t); }; c.appendChild(chip); }); c.style.display = 'flex'; }
