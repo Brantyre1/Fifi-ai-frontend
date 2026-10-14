@@ -209,7 +209,8 @@ async function ask(text) {
     const m = [...history];
     if (profile.name) m.unshift({ role: 'system', content: "The user's name is " + profile.name });
     const r = await fetch(BACKEND + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: m, mode: lumeraMode, lang: lumeraLang }) });
-    const data = await r.json(); const reply = data.reply || data.error || '';
+    const data = await r.json(); let reply = data.reply || data.error || '';
+    reply = extractVocab(reply);
     const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
     const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
     if (window.marked) { loading.innerHTML = marked.parse(reply) + footer + copyHtml; applyHighlight(loading); } else { loading.innerHTML = '<div>' + reply + '</div>' + footer + copyHtml; }
@@ -235,7 +236,8 @@ camFile.onchange = async () => {
     const loading = addMsg('🔍 Looking at your photo...', 'bot');
     try {
       const r = await fetch(BACKEND + '/api/vision', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64: dataUrl, question: 'Describe this image in detail.' }) });
-      const data = await r.json(); const reply = data.reply || data.error || '';
+      const data = await r.json(); let reply = data.reply || data.error || '';
+    reply = extractVocab(reply);
       const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
       const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
       if (window.marked) { loading.innerHTML = marked.parse(reply) + footer + copyHtml; applyHighlight(loading); }
@@ -345,6 +347,75 @@ window.addEventListener('pagehide', archiveCurrentChat);
     try { localStorage.setItem('lumera_lang', lumeraLang); } catch(e) {}
   };
 })();
+
+// ===== VOCABULARY =====
+const VOCAB_KEY = 'lumera_vocab';
+
+function loadVocab() {
+  try { return JSON.parse(localStorage.getItem(VOCAB_KEY) || '[]'); } catch { return []; }
+}
+function saveVocab(list) {
+  try { localStorage.setItem(VOCAB_KEY, JSON.stringify(list)); } catch(e) {}
+}
+function addVocab(word, definition) {
+  const list = loadVocab();
+  if (list.some(v => v.word.toLowerCase() === word.toLowerCase())) return;
+  list.push({ word, definition, savedAt: new Date().toISOString() });
+  saveVocab(list);
+}
+function renderVocab() {
+  const container = document.getElementById('vocabList');
+  const sessionsEl = document.getElementById('sessionsList');
+  if (!container) return;
+  const list = loadVocab();
+  if (list.length === 0) {
+    container.innerHTML = '<p style="color:#8e8e93;font-size:14px;text-align:center;padding:20px;">No words saved yet. Use ESL mode and Lumera will save new words here.</p>';
+  } else {
+    container.innerHTML = '';
+    [...list].reverse().forEach((v, idx) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:12px;border-radius:10px;background:#f5f5f7;margin-bottom:8px;position:relative;';
+      div.innerHTML = '<div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:2px;">' + v.word + '</div>' +
+                      '<div style="font-size:13px;color:#4a4a4a;">' + v.definition + '</div>';
+      const del = document.createElement('button');
+      del.textContent = '🗑️';
+      del.style.cssText = 'position:absolute;top:8px;right:8px;background:transparent;border:none;font-size:14px;cursor:pointer;padding:4px;';
+      del.onclick = (e) => {
+        e.stopPropagation();
+        const list2 = loadVocab();
+        list2.splice(list2.length - 1 - idx, 1);
+        saveVocab(list2);
+        renderVocab();
+      };
+      div.appendChild(del);
+      container.appendChild(div);
+    });
+  }
+  container.style.display = 'block';
+  if (sessionsEl) sessionsEl.style.display = 'none';
+}
+
+// Attach button
+setTimeout(() => {
+  const vBtn = document.getElementById('vocabBtn');
+  if (vBtn) {
+    vBtn.onclick = () => {
+      renderVocab();
+    };
+  }
+}, 300);
+
+// Detect VOCAB_SUGGEST in every bot reply and save it
+function extractVocab(text) {
+  const match = text.match(/VOCAB_SUGGEST:\s*([^|]+)\|\s*(.+)/i);
+  if (match) {
+    addVocab(match[1].trim(), match[2].trim());
+    // Remove the marker line from displayed text
+    return text.replace(/VOCAB_SUGGEST:.*$/im, '').trim();
+  }
+  return text;
+}
+
 </script>
 </body>
 </html>
