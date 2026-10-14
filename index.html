@@ -7,7 +7,61 @@
   <!-- The Brantyre ESL Teacher -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+
+// ===== SUGGESTED PROMPTS =====
+const PROMPT_IDEAS = [
+  "Explain photosynthesis in simple terms",
+  "Write Python code to reverse a string",
+  "Tell me a fun fact about Kenya",
+  "Help me write a professional email",
+  "Translate hello into Swahili",
+  "What is 17 x 24?",
+  "Write a short story about a robot",
+  "Explain how the internet works",
+  "Give me 5 study tips for exams",
+  "Write HTML for a login form"
+];
+
+function showPrompts() {
+  const container = document.getElementById('promptsContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  // Shuffle and take 6
+  const shuffled = [...PROMPT_IDEAS].sort(() => Math.random() - 0.5).slice(0, 6);
+  shuffled.forEach(text => {
+    const chip = document.createElement('div');
+    chip.className = 'prompt-chip';
+    chip.textContent = text;
+    chip.onclick = () => {
+      input.value = text;
+      send.click();
+    };
+    container.appendChild(chip);
+  });
+  container.style.display = 'flex';
+}
+
+function hidePrompts() {
+  const container = document.getElementById('promptsContainer');
+  if (container) container.style.display = 'none';
+}
+
+// Show prompts on load if chat is empty
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (chat.children.length === 0) showPrompts();
+  }, 200);
+});
+
+// Hide prompts on first message; show again if chat is cleared
+const _origAddMsg = addMsg;
+function addMsg(text, cls) {
+  hidePrompts();
+  return _origAddMsg(text, cls);
+}
+
+</script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
   <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
@@ -184,6 +238,36 @@
     #sig { opacity: 0.001; position: absolute; top: 0; left: 0; pointer-events: none; }
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 3px; }
+  
+    .prompts-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px;
+      max-width: 720px;
+      margin: 0 auto;
+      justify-content: center;
+    }
+    .prompt-chip {
+      display: inline-block;
+      padding: 10px 16px;
+      background: #f2f2f7;
+      border: 1px solid #e5e5ea;
+      border-radius: 20px;
+      color: #1c1c1e;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      -webkit-appearance: none;
+      user-select: none;
+    }
+    .prompt-chip:active {
+      background: #8b5cf6;
+      color: #ffffff;
+      transform: scale(0.96);
+    }
+
   </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css"></head>
@@ -196,6 +280,7 @@
   </header>
 
   <div id="chat"></div>
+<div id="promptsContainer" class="prompts-container"></div>
 
  <div class="bar">
     <div class="icons-row">
