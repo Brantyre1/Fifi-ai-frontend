@@ -8,6 +8,9 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -182,7 +185,8 @@
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 3px; }
   </style>
-</head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css"></head>
 <body>
   <header>
     <button id="menuBtn" style="position:absolute;top:18px;left:16px;background:transparent;border:none;font-size:26px;cursor:pointer;color:#1c1c1e;padding:8px;line-height:1;">☰</button>
@@ -244,6 +248,7 @@ try {
 const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
 const combined = footer + copyHtml;
 d.innerHTML = marked.parse(m.content) + combined;
+            applyHighlight(d);
           } else {
             d.textContent = m.content;
           }
@@ -289,6 +294,7 @@ camFile.onchange = async () => {
       const combined = footer + copyHtml;
       if (window.marked) {
         loading.innerHTML = marked.parse(reply) + combined;
+      applyHighlight(loading);
       } else {
         loading.innerHTML = '<div>' + reply + '</div>' + combined;
       }
@@ -309,6 +315,14 @@ voiceBtn.onclick = () => {
   voiceBtn.classList.toggle('off', !voiceOn);
   if (!voiceOn) speechSynthesis.cancel();
 };
+
+
+function applyHighlight(container) {
+  if (!container || !window.hljs) return;
+  container.querySelectorAll('pre code').forEach(block => {
+    try { hljs.highlightElement(block); } catch(e) {}
+  });
+}
 
 function addMsg(text, cls) {
   const d = document.createElement('div');
@@ -385,6 +399,7 @@ const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</bu
 const combined = footer + copyHtml;
 if (window.marked) {
   loading.innerHTML = marked.parse(reply) + combined;
+      applyHighlight(loading);
 } else {
   loading.innerHTML = '<div>' + reply + '</div>' + combined;
 }
@@ -518,6 +533,7 @@ function loadSession(id) {
       const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
       const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
       d.innerHTML = marked.parse(m.content) + footer + copyHtml;
+      applyHighlight(d);
     } else { d.textContent = m.content; }
     chat.appendChild(d);
   });
