@@ -166,7 +166,14 @@
     #send { background: #8b5cf6; padding: 10px 14px; font-size:14px; }
 
     #cam { background:#f2f2f7; color:#1c1c1e; padding:8px 10px; font-size:14px; min-width:40px; }
-    .msg img.sent-photo { max-width:200px; border-radius:12px; margin-top:8px; display:block; }
+    .msg img.sent-photo { max-width:200px; border-radius:12px; margin-top:0; display:block; }
+    .msg.sent-photo-msg {
+      background: transparent !important;
+      padding: 0 !important;
+      margin-left: auto !important;
+      max-width: 220px !important;
+      border-radius: 12px !important;
+    }
     .img-result {
       max-width: 100%; border-radius: 16px; margin: 8px 0;
       box-shadow: 0 4px 16px rgba(0,0,0,0.08);
@@ -264,7 +271,7 @@ camFile.onchange = async () => {
   reader.onload = async (ev) => {
     const dataUrl = ev.target.result;
     const d = document.createElement('div');
-    d.className = 'msg user';
+    d.className = 'msg user sent-photo-msg';
     d.innerHTML = '<img class="sent-photo" src="' + dataUrl + '" alt="photo" />';
     chat.appendChild(d);
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
