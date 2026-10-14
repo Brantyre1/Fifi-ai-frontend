@@ -356,27 +356,64 @@ function copyMsg(btn) {
 }
 async function speak(text) {
   if (!text || !voiceOn) return;
-  const plain = text.replace(/[#*_>]/g, " ").slice(0, 800);
+  // Clean markdown
+  const plain = text.replace(/[#*_`>]/g, ' ').replace(/\s+/g, ' ').trim();
   if (!plain) return;
-  try {
-    const r = await fetch(BACKEND + '/api/voice', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: plain })
-    });
-    if (!r.ok) throw new Error('ElevenLabs failed: ' + r.status);
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.play();
-    audio.onended = () => URL.revokeObjectURL(url);
-  } catch(e) {
-    console.warn('ElevenLabs failed, using browser TTS:', e);
-    const u = new SpeechSynthesisUtterance(plain.slice(0, 400));
-    u.pitch = 1.7;
-    u.rate = 1.05;
-    speechSynthesis.speak(u);
+
+  // Split into chunks of max 180 chars, breaking at sentence boundaries
+  const chunks = splitIntoChunks(plain, 180);
+
+  for (let i = 0; i < chunks.length; i++) {
+    if (!voiceOn) return; // user toggled off
+    try {
+      const r = await fetch(BACKEND + '/api/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: chunks[i] })
+      });
+      if (!r.ok) throw new Error('TTS failed: ' + r.status);
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      await new Promise((resolve) => {
+        const audio = new Audio(url);
+        audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+        audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+        audio.play().catch(() => resolve());
+      });
+    } catch (e) {
+      console.warn('Chunk failed, using browser TTS fallback:', e);
+      const u = new SpeechSynthesisUtterance(chunks[i]);
+      u.pitch = 1.7;
+      u.rate = 1.05;
+      speechSynthesis.speak(u);
+      // Wait for fallback to finish
+      await new Promise((resolve) => {
+        u.onend = resolve;
+        u.onerror = resolve;
+      });
+    }
   }
+}
+
+function splitIntoChunks(text, maxLen) {
+  const chunks = [];
+  let remaining = text;
+  while (remaining.length > maxLen) {
+    // Find last sentence-ending punctuation within maxLen
+    let cut = -1;
+    for (let i = maxLen; i > maxLen * 0.5; i--) {
+      if (/[.!?]/.test(remaining[i])) { cut = i + 1; break; }
+    }
+    // If no punctuation, cut at last space
+    if (cut === -1) {
+      cut = remaining.lastIndexOf(' ', maxLen);
+      if (cut === -1 || cut < maxLen * 0.5) cut = maxLen;
+    }
+    chunks.push(remaining.slice(0, cut).trim());
+    remaining = remaining.slice(cut).trim();
+  }
+  if (remaining.length > 0) chunks.push(remaining);
+  return chunks;
 }
 
 const PROMPT_IDEAS = ["Explain photosynthesis","Write Python to reverse a string","Fun fact about Kenya","Write a professional email","Translate hello to Swahili","What is 17 x 24?","Short story about a robot","How the internet works","5 study tips","HTML for a login form"];
