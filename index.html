@@ -6,7 +6,22 @@
 <title>Lumera ✨</title>
 <link rel="manifest" href="manifest.json" />
 <meta name="theme-color" content="#ffffff" />
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+// ===== LANGUAGE PICKER =====
+(function setupLang() {
+  const sel = document.getElementById('langSelect');
+  if (!sel) return;
+  try {
+    const saved = localStorage.getItem('lumera_lang');
+    if (saved) { lumeraLang = saved; sel.value = saved; }
+  } catch(e) {}
+  sel.onchange = () => {
+    lumeraLang = sel.value;
+    try { localStorage.setItem('lumera_lang', lumeraLang); } catch(e) {}
+  };
+})();
+
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <style>
@@ -62,6 +77,10 @@ button#send:active { opacity: 0.85; }
 #drawer { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 999; }
 #drawerPanel { position: absolute; top: 0; left: 0; bottom: 0; width: 82%; max-width: 340px; background: #fff; padding: 24px 20px; overflow-y: auto; box-shadow: 4px 0 20px rgba(0,0,0,0.08); }
 #sig { opacity: 0.001; position: absolute; top: 0; left: 0; pointer-events: none; }
+
+    .lang-bar { display: flex; justify-content: center; padding: 0 16px 12px; max-width: 720px; margin: 0 auto; }
+    #langSelect { padding: 8px 32px 8px 14px; background: #f5f5f7; border: 1px solid #e5e5ea; border-radius: 20px; font-size: 13px; font-weight: 500; color: #4a4a4a; font-family: inherit; cursor: pointer; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234a4a4a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    
 </style>
 </head>
 <body>
@@ -78,6 +97,19 @@ button#send:active { opacity: 0.85; }
 <button class="mode-btn" data-mode="kid">🎨 Kid</button>
 <button class="mode-btn" data-mode="pro">🧑‍💼 Pro</button>
 </div>
+<div class="lang-bar">
+    <select id="langSelect" title="Reply language">
+      <option value="en">🇬🇧 English</option>
+      <option value="sw">🇰🇪 Kiswahili</option>
+      <option value="luo">🇰🇪 Dholuo</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="es">🇪🇸 Español</option>
+      <option value="pt">🇵🇹 Português</option>
+      <option value="zh">🇨🇳 中文</option>
+      <option value="ar">🇸🇦 العربية</option>
+      <option value="hi">🇮🇳 हिन्दी</option>
+    </select>
+  </div>
 <div id="chat"></div>
 <div id="promptsContainer" class="prompts-container"></div>
 <div class="bar">
@@ -105,6 +137,7 @@ button#send:active { opacity: 0.85; }
 </div>
 <script>
 let lumeraMode = 'normal';
+let lumeraLang = 'en';
 const chat = document.getElementById('chat');
 const input = document.getElementById('input');
 const send = document.getElementById('send');
@@ -162,7 +195,7 @@ async function ask(text) {
   try {
     const m = [...history];
     if (profile.name) m.unshift({ role: 'system', content: "The user's name is " + profile.name });
-    const r = await fetch(BACKEND + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: m, mode: lumeraMode }) });
+    const r = await fetch(BACKEND + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: m, mode: lumeraMode, lang: lumeraLang }) });
     const data = await r.json(); const reply = data.reply || data.error || '';
     const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
     const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
