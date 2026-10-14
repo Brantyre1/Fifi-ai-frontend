@@ -1,4 +1,4 @@
-const CACHE = "lumera-v43";
+const CACHE = "lumera-v44";
 const ASSETS = [
   "./",
   "./index.html",
