@@ -378,6 +378,7 @@ function addImg(url) {
 }
 
 async function ask(text) {
+  hidePrompts();
   addMsg(text, 'user');
   const low = text.toLowerCase();
 
@@ -656,11 +657,7 @@ window.addEventListener('load', () => {
 });
 
 // Hide prompts on first message; show again if chat is cleared
-const _origAddMsg = addMsg;
-function addMsg(text, cls) {
-  hidePrompts();
-  return _origAddMsg(text, cls);
-}
+
 </script>
 </body>
 </html>
