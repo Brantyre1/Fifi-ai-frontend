@@ -407,13 +407,35 @@ setTimeout(() => {
 
 // Detect VOCAB_SUGGEST in every bot reply and save it
 function extractVocab(text) {
-  const match = text.match(/VOCAB_SUGGEST:\s*([^|]+)\|\s*(.+)/i);
+  var output = text;
+
+  // Priority 1: VOCAB_SUGGEST marker (explicit)
+  var match = output.match(/VOCAB_SUGGEST:\s*([^|]+)\|\s*(.+)/i);
   if (match) {
     addVocab(match[1].trim(), match[2].trim());
-    // Remove the marker line from displayed text
-    return text.replace(/VOCAB_SUGGEST:.*$/im, '').trim();
+    return output.replace(/VOCAB_SUGGEST:.*$/im, '').trim();
   }
-  return text;
+
+  // Priority 2: Fallback detection - common ESL teaching patterns
+  var mA = output.match(/the word ['"]?([A-Za-z]{3,20})['"]?\s+(?:means|is|refers to)\s+([^.\n]+)/i);
+  if (mA) {
+    addVocab(mA[1], mA[2].trim().slice(0, 150));
+    return output;
+  }
+
+  var mB = output.match(/\*?([A-Z][a-z]{2,20})\*?\s*\((?:adjective|noun|verb|adverb)\)\s+(?:means|is|refers to)\s+([^.\n]+)/i);
+  if (mB) {
+    addVocab(mB[1], mB[2].trim().slice(0, 150));
+    return output;
+  }
+
+  var mC = output.match(/(?:learn|learning|study|studying) the word ['"]?([A-Za-z]{3,20})['"]?/i);
+  if (mC) {
+    var defMatch = output.match(/(?:means|is defined as|refers to)\s+([^.\n]+)/i);
+    addVocab(mC[1], defMatch ? defMatch[1].trim().slice(0, 150) : 'See reply for definition');
+  }
+
+  return output;
 }
 
 </script>
