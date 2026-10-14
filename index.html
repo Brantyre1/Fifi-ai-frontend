@@ -7,38 +7,7 @@
   <!-- The Brantyre ESL Teacher -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
-// ===== ESL TEACHER MODE =====
-let eslMode = false;
-const eslBtn = document.getElementById('eslBtn');
-
-// Restore preference
-try {
-  const savedMode = localStorage.getItem('lumera_esl_mode');
-  if (savedMode === 'true') {
-    eslMode = true;
-    eslBtn.classList.add('active');
-  }
-} catch(e) {}
-
-eslBtn.onclick = () => {
-  eslMode = !eslMode;
-  eslBtn.classList.toggle('active', eslMode);
-  try { localStorage.setItem('lumera_esl_mode', eslMode ? 'true' : 'false'); } catch(e) {}
-  // Show a small system message in the chat
-  const notice = document.createElement('div');
-  notice.className = 'msg bot';
-  notice.style.textAlign = 'center';
-  notice.style.fontSize = '13px';
-  notice.style.color = '#8e8e93';
-  notice.textContent = eslMode
-    ? '📚 ESL Teacher Mode enabled. Lumera will now correct your English and teach as you chat.'
-    : 'ESL Teacher Mode disabled. Lumera is back to normal chat mode.';
-  chat.appendChild(notice);
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-};
-
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
@@ -697,6 +666,36 @@ window.addEventListener('load', () => {
 
 // Hide prompts on first message; show again if chat is cleared
 
+
+// ===== ESL TEACHER MODE =====
+let eslMode = false;
+const eslBtn = document.getElementById('eslBtn');
+
+// Restore preference
+try {
+  const savedMode = localStorage.getItem('lumera_esl_mode');
+  if (savedMode === 'true') {
+    eslMode = true;
+    eslBtn.classList.add('active');
+  }
+} catch(e) {}
+
+eslBtn.onclick = () => {
+  eslMode = !eslMode;
+  eslBtn.classList.toggle('active', eslMode);
+  try { localStorage.setItem('lumera_esl_mode', eslMode ? 'true' : 'false'); } catch(e) {}
+  // Show a small system message in the chat
+  const notice = document.createElement('div');
+  notice.className = 'msg bot';
+  notice.style.textAlign = 'center';
+  notice.style.fontSize = '13px';
+  notice.style.color = '#8e8e93';
+  notice.textContent = eslMode
+    ? '📚 ESL Teacher Mode enabled. Lumera will now correct your English and teach as you chat.'
+    : 'ESL Teacher Mode disabled. Lumera is back to normal chat mode.';
+  chat.appendChild(notice);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+};
 </script>
 </body>
 </html>
