@@ -201,6 +201,8 @@
 
   <div id="sig">The Brantyre ESL Teacher</div>
 
+<div id="drawer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;"><div style="position:absolute;top:0;left:0;bottom:0;width:82%;max-width:340px;background:#fff;padding:20px;overflow-y:auto;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><h3 style="margin:0;font-size:19px;font-weight:700;">Past conversations</h3><button id="closeDrawer" style="background:transparent;border:none;font-size:22px;cursor:pointer;color:#6b7280;padding:4px 8px;">✕</button></div><button id="newChatBtn" style="width:100%;background:#8b5cf6;color:#fff;border:none;padding:12px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:16px;font-family:inherit;">+ New conversation</button><div id="sessionsList"></div></div></div>
+
 <script>
 const chat    = document.getElementById('chat');
 const input   = document.getElementById('input');
@@ -434,6 +436,123 @@ function speak(text) {
   if (v) u.voice = v;
   speechSynthesis.speak(u);
 }
+
+
+// ===== SESSIONS + AUTO-CLEAR =====
+function archiveCurrentChat() {
+  if (history.length === 0) return;
+  try {
+    const existing = JSON.parse(localStorage.getItem('lumera_sessions') || '[]');
+    const last = existing[existing.length - 1];
+    const same = last && JSON.stringify(last.messages) === JSON.stringify(history);
+    if (!same) {
+      existing.push({
+        id: Date.now().toString(),
+        startedAt: new Date().toISOString(),
+        title: 'Past conversation',
+        messages: [...history]
+      });
+      if (existing.length > 20) existing.splice(0, existing.length - 20);
+      localStorage.setItem('lumera_sessions', JSON.stringify(existing));
+    }
+  } catch(e) { console.error('Archive failed:', e); }
+}
+
+const menuBtn = document.getElementById('menuBtn');
+const drawer = document.getElementById('drawer');
+const closeDrawer = document.getElementById('closeDrawer');
+const sessionsList = document.getElementById('sessionsList');
+const newChatBtn = document.getElementById('newChatBtn');
+
+function formatTime(iso) {
+  try {
+    const d = new Date(iso);
+    const today = new Date();
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (d.toDateString() === today.toDateString()) return 'Today ' + time;
+    const yest = new Date(today); yest.setDate(yest.getDate() - 1);
+    if (d.toDateString() === yest.toDateString()) return 'Yesterday ' + time;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + time;
+  } catch { return 'Unknown'; }
+}
+
+function renderSessions() {
+  sessionsList.innerHTML = '';
+  const existing = JSON.parse(localStorage.getItem('lumera_sessions') || '[]');
+  if (existing.length === 0) {
+    sessionsList.innerHTML = '<p style="color:#8e8e93;font-size:14px;text-align:center;padding:20px;">No past conversations yet.</p>';
+    return;
+  }
+  const sorted = [...existing].sort((a,b) => new Date(b.startedAt) - new Date(a.startedAt));
+  sorted.forEach(sess => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:12px;border-radius:10px;background:#f2f2f7;margin-bottom:8px;cursor:pointer;';
+    div.onclick = () => loadSession(sess.id);
+    const preview = sess.messages.find(m => m.role === 'user');
+    const previewText = preview ? preview.content.slice(0, 60) : sess.title;
+    div.innerHTML = '<div style="font-size:12px;color:#8e8e93;margin-bottom:4px;">' + formatTime(sess.startedAt) + '</div><div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + previewText + '</div>';
+    sessionsList.appendChild(div);
+  });
+}
+
+function loadSession(id) {
+  const existing = JSON.parse(localStorage.getItem('lumera_sessions') || '[]');
+  const sess = existing.find(s => s.id === id);
+  if (!sess) return;
+  history.length = 0;
+  history.push(...sess.messages);
+  chat.innerHTML = '';
+  sess.messages.forEach(m => {
+    const cls = m.role === 'user' ? 'user' : 'bot';
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    if (cls === 'bot' && window.marked) {
+      const footer = '<div class="footer-sig">♤brantyreKE♤☆</div>';
+      const copyHtml = '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
+      d.innerHTML = marked.parse(m.content) + footer + copyHtml;
+    } else { d.textContent = m.content; }
+    chat.appendChild(d);
+  });
+  window.scrollTo(0, document.body.scrollHeight);
+  drawer.style.display = 'none';
+}
+
+menuBtn.onclick = () => { renderSessions(); drawer.style.display = 'block'; };
+closeDrawer.onclick = () => drawer.style.display = 'none';
+drawer.onclick = (e) => { if (e.target === drawer) drawer.style.display = 'none'; };
+newChatBtn.onclick = () => {
+  archiveCurrentChat();
+  history.length = 0;
+  chat.innerHTML = '';
+  try { localStorage.removeItem('lumera_history'); } catch(e) {}
+  drawer.style.display = 'none';
+};
+window.addEventListener('beforeunload', archiveCurrentChat);
+window.addEventListener('pagehide', archiveCurrentChat);
+
+// ===== ON LOAD: archive previous session, then clear visible chat =====
+(function clearOnLoad() {
+  try {
+    const saved = localStorage.getItem('lumera_history');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Archive the previous conversation
+        const existing = JSON.parse(localStorage.getItem('lumera_sessions') || '[]');
+        existing.push({
+          id: Date.now().toString(),
+          startedAt: new Date().toISOString(),
+          title: 'Past conversation',
+          messages: parsed
+        });
+        if (existing.length > 20) existing.splice(0, existing.length - 20);
+        localStorage.setItem('lumera_sessions', JSON.stringify(existing));
+      }
+      // Clear visible history
+      localStorage.removeItem('lumera_history');
+    }
+  } catch(e) { console.error('Auto-clear failed:', e); }
+})();
 </script>
 </body>
 </html>
