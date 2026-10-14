@@ -163,6 +163,34 @@ async function ask(text) {
   hidePrompts();
   addMsg(text, 'user');
   const low = text.toLowerCase();
+  if (/^(make a video|create a video|generate a video|animate)/.test(low)) {
+    const prompt = text.replace(/^(make a video of|create a video of|generate a video of|animate)\s*/i, '');
+    const loading = addMsg('🎬 Generating video... (this may take 10-30 seconds)', 'bot');
+    try {
+      const r = await fetch(BACKEND + '/api/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await r.json();
+      loading.remove();
+      if (data.url) {
+        const videoMsg = document.createElement('div');
+        videoMsg.className = 'msg bot';
+        videoMsg.innerHTML = '<img class="img-result" src="' + data.url + '" alt="generated video" />' +
+                             '<div class="footer-sig">♤brantyreKE♤☆</div>' +
+                             '<button class="copy-btn" onclick="copyMsg(this)">📋 Copy</button>';
+        chat.appendChild(videoMsg);
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        speak('Here is your animation');
+      } else {
+        addMsg('Error: ' + (data.error || 'unknown'), 'bot');
+      }
+    } catch(e) {
+      loading.textContent = 'Error: ' + e.message;
+    }
+    return;
+  }
   if (/^(draw|paint|make a picture|create an image|generate an image)/.test(low)) {
     const prompt = text.replace(/^(draw|paint|make a picture of|create an image of|generate an image of)\s*/i, '');
     const loading = addMsg('🎨 Drawing...', 'bot');
