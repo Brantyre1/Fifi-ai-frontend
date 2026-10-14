@@ -635,8 +635,8 @@ function showPrompts() {
     chip.className = 'prompt-chip';
     chip.textContent = text;
     chip.onclick = () => {
-      input.value = text;
-      send.click();
+      hidePrompts();
+      ask(text);
     };
     container.appendChild(chip);
   });
